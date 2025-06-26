@@ -1,0 +1,120 @@
+/* === 共通レイアウト === */
+.list {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family: sans-serif;
+}
+
+.list__title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  border-left: 5px solid black;
+  padding-left: 10px;
+}
+
+/* === カレンダー風の月切替UI === */
+.list__calendar-nav {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.calendar-nav__form {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 0 32px;
+  width: 100%;
+  /* 親の幅に自動で合わせる */
+  max-width: 1000px;
+  height: 60px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.calendar-nav__button {
+  font-size: 14px;
+  color: #555;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.calendar-nav__button:hover {
+  text-decoration: underline;
+  color: #000;
+}
+
+.calendar-nav__current {
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calendar-nav__current i {
+  font-size: 16px;
+  color: #333;
+}
+
+/* === タブUI（必要に応じて） === */
+.list__tabs {
+  display: flex;
+  border-bottom: 2px solid gray;
+  margin-bottom: 20px;
+}
+
+.list__tab {
+  font-size: 16px;
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.list__tab--active {
+  font-weight: bold;
+  border-bottom: 2px solid black;
+}
+
+/* === テーブル === */
+.list__table {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  /* カレンダーと一体感UP */
+}
+
+.list__table th,
+.list__table td {
+  padding: 12px 16px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.list__table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+/* === 詳細リンク（申請詳細用など） === */
+.attendance__link,
+.list__link {
+  color: black;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.attendance__link:hover,
+.list__link:hover {
+  text-decoration: underline;
+}

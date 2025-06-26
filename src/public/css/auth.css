@@ -1,0 +1,148 @@
+/* ==== RESET ==== */
+body {
+  font-family: sans-serif;
+  background-color: #fff;
+  margin: 0;
+  padding: 0;
+}
+
+/* ==== CONTAINER ==== */
+.container {
+  width: 100%;
+  max-width: 680px;
+  margin: 60px auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* ==== FORM ==== */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* ==== FORM LABEL ==== */
+form label {
+  text-align: left;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 6px;
+  display: block;
+  margin-top: 20px;
+}
+
+/* ==== INPUT ==== */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid gray;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* ==== BUTTON ==== */
+button {
+  background-color: #000;
+  color: #fff;
+  padding: 12px;
+  font-size: 26px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 4px;
+  margin-top: 80px;
+}
+
+/* ==== メイン認証ボタン ==== */
+.verify-main-button {
+  display: block;
+  margin: 30px auto 0 auto;
+  width: auto;
+  background-color: #d9d9d9;
+  color: black;
+  padding: 16px 36px;
+  font-size: 24px;
+  font-weight: bold;
+  border: 1px solid gray;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  white-space: nowrap;
+}
+
+.verify-main-button:hover {
+  background-color: #bbb;
+}
+
+.verify-description {
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+/* ==== 認証メール再送リンク風ボタン ==== */
+.resend-link {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 20px;
+  text-decoration: none;
+  cursor: pointer;
+  margin-top: 30px;
+  display: inline-block;
+}
+
+/* ==== 中央配置 ==== */
+.center-link {
+  text-align: center;
+}
+
+/* ==== LINK ==== */
+a {
+  display: block;
+  text-align: center;
+  font-size: 20px;
+  color: #007bff;
+  text-decoration: none;
+  margin-top: 20px;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.center-link {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.auth-wrapper {
+  height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ==== PC 固定幅（1400〜1540px）対応 ==== */
+@media screen and (min-width: 1400px) and (max-width: 1540px) {
+  .container {
+    margin-top: 80px;
+  }
+}

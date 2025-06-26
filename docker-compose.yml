@@ -13,8 +13,12 @@ services:
 
   php:
     build: ./docker/php
+    user: "1000:1000"
     volumes:
       - ./src:/var/www/
+    depends_on:
+      - mysql
+      - mailhog
 
   mysql:
     image: mysql:8.0.26
@@ -40,3 +44,10 @@ services:
       - mysql
     ports:
       - 8080:80
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"

@@ -1,0 +1,140 @@
+body {
+  background-color: #f2f2f4;
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.show {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 30px 20px;
+  background-color: white;
+  border-radius: 12px;
+}
+
+.show__title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 40px auto 30px auto;
+  max-width: 1200px;
+  border-left: 5px solid #333;
+  padding-left: 10px;
+}
+
+.show__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 30px;
+}
+
+.show__table td {
+  padding: 20px 20px 20px 0px;
+  vertical-align: middle;
+}
+
+.show__table th,
+.show__table td {
+  text-align: left;
+  border-bottom: 1px solid #ccc;
+  vertical-align: middle;
+  font-size: 16px;
+}
+
+.show__table th {
+  width: 25%;
+  font-weight: bold;
+  height: 60px;
+  padding: 20px 40px 20px 20px;
+}
+
+.show__date-year,
+.show__date-monthday {
+  font-weight: bold;
+  font-size: 18px;
+  margin-right: 10px;
+}
+
+.show__time-input {
+  width: 100px;
+  padding: 6px 8px;
+  font-size: 16px;
+  margin-right: 40px;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.show__note-input {
+  width: 600px;
+  padding: 8px;
+  font-size: 16px;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.show__actions-fixed {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  margin-right: 20px;
+}
+
+.show__submit {
+  padding: 12px 40px;
+  font-size: 16px;
+  background-color: black;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.show__submit:hover {
+  background-color: #333;
+}
+
+.show-wrapper {
+  position: relative;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding-bottom: 80px;
+}
+
+.show__actions-outside {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.show__tilde {
+  display: inline-block;
+  margin-right: 40px;
+  font-weight: bold;
+  color: #333;
+}
+
+.show__date-wrapper {
+  display: flex;
+  align-items: center;
+  height: 60px;
+}
+
+/* ✅ 承認待ちメッセージ：テーブル外・右寄せに表示 */
+.show__note-warning-wrapper {
+  text-align: right;
+  margin-top: 10px;
+  margin-right: 20px;
+}
+
+.show__note-warning {
+  color: #e6587c;
+  font-size: 16px;
+  margin: 0;
+}

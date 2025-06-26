@@ -1,0 +1,58 @@
+/* ===== RESET / BASE ===== */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #F0EFF2;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* ===== 白背景にしたいページ（ログイン・登録・認証） ===== */
+body.auth-page {
+  background-color: #ffffff;
+}
+
+/* ===== HEADER ===== */
+.header {
+  background-color: #000;
+  width: 100%;
+}
+
+.header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 80px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.header__logo {
+  width: 370px;
+  height: 36px;
+}
+
+/* ===== PC幅固定（1400〜1540px）対応 ===== */
+@media screen and (min-width: 1400px) and (max-width: 1540px) {
+  .header__inner {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
+/* ===== 汎用リンク・ボタン調整（必要であれば） ===== */
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
