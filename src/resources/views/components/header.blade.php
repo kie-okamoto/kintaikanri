@@ -9,7 +9,7 @@
 
     @php
     // ログインしていても、以下のルートではヘッダーナビゲーションを非表示にする
-    $hideOnRoutes = ['login', 'register', 'verification.notice'];
+    $hideOnRoutes = ['login', 'register', 'verification.notice', 'admin.login'];
     @endphp
 
     @if (!in_array(Route::currentRouteName(), $hideOnRoutes))
@@ -23,7 +23,8 @@
       <a href="{{ route('attendance.list') }}">勤怠一覧</a>
       <a href="{{ route('stamp.list') }}">申請</a>
       @endif
-      <form method="POST" action="{{ route('logout') }}" class="header__logout-form">
+
+      <form method="POST" action="{{ route(Auth::guard('admin')->check() ? 'admin.logout' : 'logout') }}" class="header__logout-form">
         @csrf
         <button type="submit" class="header__logout-button">ログアウト</button>
       </form>

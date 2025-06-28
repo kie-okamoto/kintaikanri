@@ -4,6 +4,14 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/attendance_list.css') }}">
+<style>
+  .attendance__link--disabled {
+    pointer-events: none;
+    color: gray;
+    text-decoration: none;
+    cursor: default;
+  }
+</style>
 @endsection
 
 @section('content')
@@ -15,7 +23,7 @@
     <form method="GET" action="{{ route('attendance.list') }}" class="calendar-nav__form">
       @php
       use Carbon\Carbon;
-      Carbon::setLocale('ja'); // 日本語表示のため追加
+      Carbon::setLocale('ja');
       $currentMonth = Carbon::createFromFormat('Y-m', $month);
       $prevMonth = $currentMonth->copy()->subMonth()->format('Y-m');
       $nextMonth = $currentMonth->copy()->addMonth()->format('Y-m');
@@ -31,9 +39,6 @@
     </form>
   </div>
 
-  @if ($attendances->isEmpty())
-  <p>該当する勤怠記録はありません。</p>
-  @else
   <table class="list__table">
     <thead>
       <tr>
@@ -48,27 +53,37 @@
     <tbody>
       @foreach ($attendances as $attendance)
       <tr>
-        {{-- 日付（曜日付き日本語表示） --}}
-        <td>{{ \Carbon\Carbon::parse($attendance->date)->isoFormat('MM/DD (ddd)') }}</td>
-
-        {{-- 出勤時間 --}}
-        <td>{{ optional($attendance->clock_in)->format('H:i') ?? '-' }}</td>
-
-        {{-- 退勤時間 --}}
-        <td>{{ optional($attendance->clock_out)->format('H:i') ?? '-' }}</td>
-
-        {{-- 休憩時間（秒なし） --}}
-        <td>{{ $attendance->break_duration ? substr($attendance->break_duration, 0, 5) : '-' }}</td>
-
-        {{-- 合計勤務時間（秒なし） --}}
-        <td>{{ $attendance->total_duration ? substr($attendance->total_duration, 0, 5) : '-' }}</td>
-
-        {{-- 詳細リンク --}}
-        <td><a href="{{ route('attendance.show', $attendance->id) }}" class="attendance__link">詳細</a></td>
+        <td>
+          {{
+      $attendance->date instanceof \Carbon\Carbon
+        ? $attendance->date->isoFormat('MM/DD（dd）')
+        : \Carbon\Carbon::parse($attendance->date)->isoFormat('MM/DD（dd）')
+    }}
+        </td>
+        <td>
+          {{ $attendance->clock_in ? \Carbon\Carbon::parse($attendance->clock_in)->format('H:i') : '' }}
+        </td>
+        <td>
+          {{ $attendance->clock_out ? \Carbon\Carbon::parse($attendance->clock_out)->format('H:i') : '' }}
+        </td>
+        <td>
+          {{ $attendance->break_duration ?? '' }}
+        </td>
+        <td>
+          {{ $attendance->total_duration ?? '' }}
+        </td>
+        <td>
+          @if ($attendance->id)
+          <a href="{{ route('attendance.show', $attendance->id) }}" class="link">詳細</a>
+          @else
+          <span class="attendance__link--disabled">詳細</span>
+          @endif
+        </td>
       </tr>
+
       @endforeach
+
     </tbody>
   </table>
-  @endif
 </div>
 @endsection

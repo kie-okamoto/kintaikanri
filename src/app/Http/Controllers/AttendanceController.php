@@ -127,18 +127,38 @@ class AttendanceController extends Controller
     {
         $month = $request->input('month', now()->format('Y-m'));
 
-        $attendances = Attendance::whereYear('date', substr($month, 0, 4))
-            ->whereMonth('date', substr($month, 5, 2))
-            ->where('user_id', auth()->id())
-            ->orderBy('date')
-            ->get();
+        $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
-        $attendances->each(function ($attendance) {
-            $attendance->calculateDurations();
-        });
+        // 勤怠情報を取得（キーを文字列化してY-m-dで揃える）
+        $attendances = Attendance::where('user_id', auth()->id())
+            ->whereBetween('date', [
+                $startOfMonth->copy()->startOfDay(),
+                $endOfMonth->copy()->endOfDay()
+            ])
+            ->get()
+            ->keyBy(function ($item) {
+                return Carbon::parse($item->date)->format('Y-m-d');
+            });
+
+        // カレンダーに表示する全日付を作成
+        $daysInMonth = [];
+        for ($date = $startOfMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
+            $dayString = $date->format('Y-m-d');
+            $daysInMonth[] = $attendances->has($dayString)
+                ? $attendances->get($dayString)
+                : (object)[
+                    'date' => $dayString,
+                    'clock_in' => null,
+                    'clock_out' => null,
+                    'break_duration' => null,
+                    'total_duration' => null,
+                    'id' => null,
+                ];
+        }
 
         return view('attendance.list', [
-            'attendances' => $attendances,
+            'attendances' => $daysInMonth,
             'month' => $month,
         ]);
     }
