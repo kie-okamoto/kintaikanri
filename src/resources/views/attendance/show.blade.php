@@ -11,7 +11,7 @@
 
 <div class="show-wrapper">
   <div class="show">
-    {{-- ✅ formタグにid="form" を追加 --}}
+    {{-- 修正申請フォーム --}}
     <form id="form" method="POST" action="{{ route('attendance.updateRequest', $attendance->id) }}">
       @csrf
       @method('POST')
@@ -33,51 +33,69 @@
         <tr>
           <th>出勤・退勤</th>
           <td>
-            <input type="time" name="clock_in" value="{{ optional($attendance->clock_in)->format('H:i') }}" class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
+            <input type="time" name="clock_in"
+              value="{{ optional($attendance->clock_in)->format('H:i') }}"
+              class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
             <span class="show__tilde">〜</span>
-            <input type="time" name="clock_out" value="{{ optional($attendance->clock_out)->format('H:i') }}" class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
+            <input type="time" name="clock_out"
+              value="{{ optional($attendance->clock_out)->format('H:i') }}"
+              class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
           </td>
         </tr>
 
+        {{-- 休憩時間：登録されている分だけ表示 --}}
+        @foreach ($attendance->breaks as $i => $break)
         <tr>
-          <th>休憩</th>
+          <th>休憩{{ $i + 1 }}</th>
           <td>
-            <input type="time" name="breaks[0][start]" value="{{ optional($attendance->break_start)->format('H:i') }}" class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
+            <input type="time" name="breaks[{{ $i }}][start]"
+              value="{{ optional($break->start)->format('H:i') }}"
+              class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
             <span class="show__tilde">〜</span>
-            <input type="time" name="breaks[0][end]" value="{{ optional($attendance->break_end)->format('H:i') }}" class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
+            <input type="time" name="breaks[{{ $i }}][end]"
+              value="{{ optional($break->end)->format('H:i') }}"
+              class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
           </td>
         </tr>
+        @endforeach
 
+        {{-- 追加用の空欄を1行だけ表示（承認待ちでないとき） --}}
+        @unless($isPending)
         <tr>
-          <th>休憩2</th>
+          <th>休憩{{ $attendance->breaks->count() + 1 }}</th>
           <td>
-            <input type="time" name="breaks[1][start]" value="" class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
+            <input type="time" name="breaks[{{ $attendance->breaks->count() }}][start]" class="show__time-input">
             <span class="show__tilde">〜</span>
-            <input type="time" name="breaks[1][end]" value="" class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
+            <input type="time" name="breaks[{{ $attendance->breaks->count() }}][end]" class="show__time-input">
           </td>
         </tr>
+        @endunless
 
         <tr>
           <th>備考</th>
           <td>
-            <input type="text" name="note" value="{{ old('note', $attendance->note ?? '') }}" class="show__note-input" {{ $isPending ? 'readonly' : '' }}>
+            <input type="text" name="note"
+              value="{{ old('note', $attendance->note ?? '') }}"
+              class="show__note-input" {{ $isPending ? 'readonly' : '' }}>
           </td>
         </tr>
       </table>
     </form>
   </div>
 
-  {{-- 修正ボタン：承認待ち以外のときのみ表示 --}}
+  {{-- 修正ボタン --}}
   @if (!$isPending)
   <div class="show__actions-outside">
     <button type="submit" form="form" class="show__submit">修正</button>
   </div>
   @else
-  {{-- ✅ 修正不可コメントは白枠外・右寄せ --}}
   <div class="show__note-warning-wrapper">
     <p class="show__note-warning">※承認待ちのため修正はできません。</p>
   </div>
   @endif
-
 </div>
+@endsection
+
+@section('scripts')
+{{-- JavaScript不要 --}}
 @endsection

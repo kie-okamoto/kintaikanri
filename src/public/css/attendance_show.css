@@ -120,6 +120,13 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   color: #333;
 }
 
+.show__break-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
 .show__date-wrapper {
   display: flex;
   align-items: center;

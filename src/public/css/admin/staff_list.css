@@ -1,0 +1,60 @@
+body {
+  background-color: #f1f0f5;
+  font-family: 'Helvetica Neue', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* タイトル */
+.staff-list__title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 40px auto 30px;
+  max-width: 1000px;
+  border-left: 5px solid #000;
+  padding-left: 10px;
+}
+
+/* 白いテーブルボックス */
+.staff-list__wrapper {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+
+/* テーブル */
+.staff-list__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.staff-list__table thead {
+  background-color: #f6f6f6;
+}
+
+.staff-list__table th,
+.staff-list__table td {
+  padding: 14px 18px;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.staff-list__table th {
+  font-weight: bold;
+}
+
+/* 詳細リンク */
+.staff-list__link {
+  font-weight: bold;
+  color: #000;
+  text-decoration: none;
+}
+
+.staff-list__link:hover {
+  text-decoration: underline;
+}

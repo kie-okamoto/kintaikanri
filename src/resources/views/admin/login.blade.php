@@ -19,10 +19,16 @@
       @csrf
 
       <label for="email">メールアドレス</label>
-      <input type="email" name="email" id="email" value="{{ old('email') }}" required>
+      <input type="text" name="email" id="email" value="{{ old('email') }}">
+      @error('email')
+      <div class="error">{{ $message }}</div>
+      @enderror
 
       <label for="password">パスワード</label>
-      <input type="password" name="password" id="password" required>
+      <input type="password" name="password" id="password">
+      @error('password')
+      <div class="error">{{ $message }}</div>
+      @enderror
 
       <button type="submit">管理者ログインする</button>
     </form>

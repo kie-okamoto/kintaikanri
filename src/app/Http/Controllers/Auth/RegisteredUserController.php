@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
+use App\Http\Requests\RegisterRequest;
 
 class RegisteredUserController extends Controller
 {
@@ -22,14 +22,9 @@ class RegisteredUserController extends Controller
     /**
      * 登録処理
      */
-    public function store(Request $request)
+    public function store(RegisterRequest $request) // ★ Request → RegisterRequest に変更
     {
-        // バリデーション
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        // バリデーションは RegisterRequest で実行済み
 
         // ユーザー作成
         $user = User::create([
@@ -38,10 +33,10 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // ✅ メール認証トリガー
+        // メール認証イベント
         event(new Registered($user));
 
-        // ✅ 自動ログイン
+        // 自動ログイン
         Auth::login($user);
 
         // 認証ページへリダイレクト

@@ -67,10 +67,10 @@
           {{ $attendance->clock_out ? \Carbon\Carbon::parse($attendance->clock_out)->format('H:i') : '' }}
         </td>
         <td>
-          {{ $attendance->break_duration ?? '' }}
+          {{ $attendance->calculated_break_duration ?? '' }}
         </td>
         <td>
-          {{ $attendance->total_duration ?? '' }}
+          {{ $attendance->total_duration ? substr($attendance->total_duration, 0, 5) : '' }}
         </td>
         <td>
           @if ($attendance->id)

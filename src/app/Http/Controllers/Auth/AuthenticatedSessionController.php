@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\LoginRequest;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -13,24 +13,14 @@ class AuthenticatedSessionController extends Controller
     return view('auth.login');
   }
 
-  public function store(Request $request)
+  public function store(LoginRequest $request)
   {
-    $credentials = $request->validate([
-      'email' => ['required', 'email'],
-      'password' => ['required'],
-    ]);
-
-    if (Auth::attempt($credentials)) {
-      $request->session()->regenerate();
-      return redirect()->intended('/attendance');
-    }
-
-    return back()->withErrors([
-      'email' => 'メールアドレスまたはパスワードが正しくありません。',
-    ]);
+    // LoginRequest 内で Auth::attempt 済み
+    $request->session()->regenerate();
+    return redirect()->intended('/attendance');
   }
 
-  public function destroy(Request $request)
+  public function destroy(\Illuminate\Http\Request $request)
   {
     Auth::logout();
     $request->session()->invalidate();

@@ -106,6 +106,10 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin')->group(function
     // スタッフ一覧・スタッフ別勤怠
     Route::get('/staff/list', [AdminStaffController::class, 'index'])->name('staff.list');
     Route::get('/attendance/staff/{id}', [AdminAttendanceController::class, 'staffList'])->name('attendance.staff');
+    Route::get('/attendance/staff/{id}/detail', [AdminAttendanceController::class, 'staffDetail'])->name('attendance.staff_detail');
+
+    Route::get('/attendance/staff/{id}/export', [AdminAttendanceController::class, 'exportCsv'])->name('attendance.export_csv');
+
 
     // 修正申請一覧・承認
     Route::get('/stamp_correction_request/list', [AdminStampController::class, 'index'])->name('stamp.list');

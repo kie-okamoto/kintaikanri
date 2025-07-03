@@ -16,6 +16,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'is_admin',
     ];
 
     protected $hidden = [
@@ -26,4 +27,10 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    // ユーザーの勤怠データとのリレーション
+    public function attendances()
+    {
+        return $this->hasMany(\App\Models\Attendance::class);
+    }
 }

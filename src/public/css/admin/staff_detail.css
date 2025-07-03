@@ -1,0 +1,106 @@
+/* ==== RESET ==== */
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f9f9f9;
+}
+
+/* ==== 白色ブロック全体ラッパー ==== */
+.staff-detail__wrapper {
+  max-width: 1000px;
+  margin: 40px auto;
+  background-color: #fff;
+  padding: 40px 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ==== TITLE ==== */
+.staff-detail__title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  border-left: 6px solid black;
+  padding-left: 12px;
+}
+
+/* ==== 月ナビゲーション ==== */
+.staff-detail__month-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 30px auto 40px;
+  font-size: 20px;
+  gap: 60px;
+  font-weight: bold;
+}
+
+.staff-detail__month-link {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+}
+
+.staff-detail__month {
+  font-weight: bold;
+  font-size: 20px;
+}
+
+/* ==== TABLE ==== */
+.staff-detail__table-wrapper {
+  max-width: 900px;
+  margin: 0 auto 40px;
+  overflow-x: auto;
+}
+
+.staff-detail__table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+.staff-detail__table thead {
+  background-color: #eee;
+}
+
+.staff-detail__table th,
+.staff-detail__table td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #ccc;
+}
+
+.staff-detail__link {
+  color: black;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.staff-detail__link--disabled {
+  color: #ccc;
+  pointer-events: none;
+  text-decoration: none;
+}
+
+/* ==== CSV出力ボタン ==== */
+.staff-detail__csv {
+  text-align: right;
+  max-width: 900px;
+  margin: 0 auto 40px;
+}
+
+.staff-detail__csv-button {
+  padding: 10px 20px;
+  background-color: black;
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.staff-detail__csv-button:hover {
+  opacity: 0.8;
+}

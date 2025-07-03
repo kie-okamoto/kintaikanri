@@ -34,7 +34,7 @@ form label {
 }
 
 /* 入力欄 */
-input[type="email"],
+input[type="text"],
 input[type="password"] {
   width: 100%;
   padding: 12px;
@@ -73,6 +73,14 @@ button {
 .header__logo {
   width: 370px;
   height: 36px;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  text-align: left;
 }
 
 /* PC幅対応 */

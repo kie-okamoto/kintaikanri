@@ -140,6 +140,14 @@ a {
   box-sizing: border-box;
 }
 
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
 /* ==== PC 固定幅（1400〜1540px）対応 ==== */
 @media screen and (min-width: 1400px) and (max-width: 1540px) {
   .container {

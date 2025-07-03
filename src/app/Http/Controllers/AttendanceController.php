@@ -18,10 +18,8 @@ class AttendanceController extends Controller
     public function register()
     {
         Carbon::setLocale('ja');
-
         $today = Carbon::now()->isoFormat('YYYY年M月D日(ddd)');
         $time = Carbon::now()->format('H:i');
-
         $status = Session::get('attendance_status', 'off');
 
         return view('attendance.register', [
@@ -50,14 +48,15 @@ class AttendanceController extends Controller
         $user = Auth::user();
         $today = Carbon::today()->toDateString();
 
-        $attendance = Attendance::where('user_id', $user->id)
-            ->where('date', $today)
-            ->first();
+        $attendance = Attendance::firstOrCreate(
+            ['user_id' => $user->id, 'date' => $today],
+            ['clock_in' => Carbon::now()]
+        );
 
-        if ($attendance) {
-            $attendance->break_start = Carbon::now();
-            $attendance->save();
-        }
+        $attendance->breaks()->create([
+            'start' => Carbon::now(),
+            'end' => null,
+        ]);
 
         Session::put('attendance_status', 'break');
         return redirect()->route('attendance.register');
@@ -70,11 +69,17 @@ class AttendanceController extends Controller
 
         $attendance = Attendance::where('user_id', $user->id)
             ->where('date', $today)
+            ->with('breaks')
             ->first();
 
         if ($attendance) {
-            $attendance->break_end = Carbon::now();
-            $attendance->save();
+            $lastBreak = $attendance->breaks()->whereNull('end')->latest()->first();
+            if ($lastBreak) {
+                $lastBreak->end = Carbon::now();
+                $lastBreak->save();
+            }
+            $attendance->load('breaks');
+            $attendance->save(); // 自動再計算される
         }
 
         Session::put('attendance_status', 'working');
@@ -88,35 +93,12 @@ class AttendanceController extends Controller
 
         $attendance = Attendance::where('user_id', $user->id)
             ->where('date', $today)
+            ->with('breaks')
             ->first();
 
         if ($attendance) {
             $attendance->clock_out = Carbon::now();
-
-            // 休憩時間を計算
-            if ($attendance->break_start && $attendance->break_end) {
-                $breakSeconds = Carbon::parse($attendance->break_end)
-                    ->diffInSeconds(Carbon::parse($attendance->break_start));
-                $attendance->break_duration = gmdate('H:i', $breakSeconds);
-            } else {
-                $attendance->break_duration = null;
-            }
-
-            // 勤務合計時間（休憩除く）
-            if ($attendance->clock_in && $attendance->clock_out) {
-                $workSeconds = Carbon::parse($attendance->clock_out)
-                    ->diffInSeconds(Carbon::parse($attendance->clock_in));
-
-                if ($attendance->break_duration) {
-                    $breakParts = explode(':', $attendance->break_duration);
-                    $breakSeconds = ((int)$breakParts[0] * 60 + (int)$breakParts[1]) * 60;
-                    $workSeconds -= $breakSeconds;
-                }
-
-                $attendance->total_duration = gmdate('H:i', max(0, $workSeconds));
-            }
-
-            $attendance->save();
+            $attendance->save(); // 自動再計算される
         }
 
         Session::put('attendance_status', 'done');
@@ -130,8 +112,9 @@ class AttendanceController extends Controller
         $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
-        // 勤怠情報を取得（キーを文字列化してY-m-dで揃える）
-        $attendances = Attendance::where('user_id', auth()->id())
+        // 勤怠 + 休憩も取得
+        $attendances = Attendance::with('breaks')
+            ->where('user_id', auth()->id())
             ->whereBetween('date', [
                 $startOfMonth->copy()->startOfDay(),
                 $endOfMonth->copy()->endOfDay()
@@ -141,20 +124,33 @@ class AttendanceController extends Controller
                 return Carbon::parse($item->date)->format('Y-m-d');
             });
 
-        // カレンダーに表示する全日付を作成
         $daysInMonth = [];
         for ($date = $startOfMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
             $dayString = $date->format('Y-m-d');
-            $daysInMonth[] = $attendances->has($dayString)
-                ? $attendances->get($dayString)
-                : (object)[
+            if ($attendances->has($dayString)) {
+                $attendance = $attendances->get($dayString);
+
+                // 休憩時間の計算
+                $totalBreakSeconds = $attendance->breaks->sum(function ($break) {
+                    if ($break->start && $break->end) {
+                        return Carbon::parse($break->end)->diffInSeconds(Carbon::parse($break->start));
+                    }
+                    return 0;
+                });
+
+                $attendance->calculated_break_duration = gmdate('H:i', $totalBreakSeconds);
+
+                $daysInMonth[] = $attendance;
+            } else {
+                $daysInMonth[] = (object)[
                     'date' => $dayString,
                     'clock_in' => null,
                     'clock_out' => null,
-                    'break_duration' => null,
+                    'calculated_break_duration' => null,
                     'total_duration' => null,
                     'id' => null,
                 ];
+            }
         }
 
         return view('attendance.list', [
@@ -165,9 +161,7 @@ class AttendanceController extends Controller
 
     public function show($id)
     {
-        $attendance = Attendance::with('user')->findOrFail($id);
-
-        // 修正申請済かどうかを確認（status列を仮定：'pending', 'approved' など）
+        $attendance = Attendance::with(['user', 'breaks'])->findOrFail($id);
         $isPending = $attendance->approval_status === 'pending';
 
         return view('attendance.show', compact('attendance', 'isPending'));
@@ -175,26 +169,25 @@ class AttendanceController extends Controller
 
     public function updateRequest(Request $request, $id)
     {
-        $attendance = Attendance::findOrFail($id);
+        $attendance = Attendance::with('breaks')->findOrFail($id);
 
-        // 入力値を取得
         $attendance->clock_in = $request->input('clock_in');
         $attendance->clock_out = $request->input('clock_out');
-
-        // 1件目の休憩（あれば）
-        if ($request->has('breaks.0.start') && $request->has('breaks.0.end')) {
-            $attendance->break_start = $request->input('breaks.0.start');
-            $attendance->break_end = $request->input('breaks.0.end');
-        }
-
-        // 備考
         $attendance->note = $request->input('note');
-
-        // 申請状態（未承認）
         $attendance->approval_status = 'pending';
-
-        // 保存
         $attendance->save();
+
+        // 休憩の再登録
+        $attendance->breaks()->delete();
+        $breaks = $request->input('breaks', []);
+        foreach ($breaks as $break) {
+            if (!empty($break['start']) && !empty($break['end'])) {
+                $attendance->breaks()->create([
+                    'start' => $break['start'],
+                    'end' => $break['end'],
+                ]);
+            }
+        }
 
         return redirect()->route('stamp.list')->with('success', '修正申請を保存しました。');
     }

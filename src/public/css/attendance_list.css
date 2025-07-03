@@ -29,7 +29,6 @@
   border-radius: 10px;
   padding: 0 32px;
   width: 100%;
-  /* 親の幅に自動で合わせる */
   max-width: 1000px;
   height: 60px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);

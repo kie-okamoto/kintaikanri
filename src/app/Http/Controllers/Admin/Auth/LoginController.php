@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\AdminLoginRequest;
 
 class LoginController extends Controller
 {
@@ -19,17 +19,11 @@ class LoginController extends Controller
     /**
      * ログイン処理
      */
-    public function login(Request $request)
+    public function login(AdminLoginRequest $request)
     {
-        $credentials = $request->only('email', 'password');
-
-        if (Auth::guard('admin')->attempt($credentials)) {
-            return redirect()->route('admin.attendance.list');
-        }
-
-        return back()->withErrors([
-            'email' => 'メールアドレスまたはパスワードが正しくありません。',
-        ])->withInput();
+        // AdminLoginRequest内でログイン試行済みなので、ここでは成功処理のみ
+        $request->session()->regenerate();
+        return redirect()->route('admin.attendance.list');
     }
 
     /**
