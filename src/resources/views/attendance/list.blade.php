@@ -3,15 +3,8 @@
 @section('title', '勤怠一覧画面（一般ユーザー）')
 
 @section('styles')
+<link rel="stylesheet" href="{{ asset('css/sanitize.css') }}">
 <link rel="stylesheet" href="{{ asset('css/attendance_list.css') }}">
-<style>
-  .attendance__link--disabled {
-    pointer-events: none;
-    color: gray;
-    text-decoration: none;
-    cursor: default;
-  }
-</style>
 @endsection
 
 @section('content')

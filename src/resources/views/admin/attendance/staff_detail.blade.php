@@ -9,18 +9,18 @@
 @endsection
 
 @section('content')
+{{-- タイトル --}}
+<h2 class="staff-detail__title--outside">{{ $user->name }}さんの勤怠</h2>
+
+{{-- 月ナビゲーション --}}
+<div class="staff-detail__month-nav">
+  <a href="{{ route('admin.attendance.staff_detail', ['id' => $user->id, 'month' => $previousMonth]) }}" class="staff-detail__month-link">← 前月</a>
+  <span class="staff-detail__month">{{ \Carbon\Carbon::parse($currentMonth)->format('Y年n月') }}</span>
+  <a href="{{ route('admin.attendance.staff_detail', ['id' => $user->id, 'month' => $nextMonth]) }}" class="staff-detail__month-link">翌月 →</a>
+</div>
+
+{{-- 勤怠テーブル（白ブロック内） --}}
 <div class="staff-detail__wrapper">
-  {{-- タイトル --}}
-  <h2 class="staff-detail__title">{{ $user->name }}さんの勤怠</h2>
-
-  {{-- 月ナビゲーション --}}
-  <div class="staff-detail__month-nav">
-    <a href="{{ route('admin.attendance.staff_detail', ['id' => $user->id, 'month' => $previousMonth]) }}" class="staff-detail__month-link">← 前月</a>
-    <span class="staff-detail__month">{{ \Carbon\Carbon::parse($currentMonth)->format('Y年n月') }}</span>
-    <a href="{{ route('admin.attendance.staff_detail', ['id' => $user->id, 'month' => $nextMonth]) }}" class="staff-detail__month-link">翌月 →</a>
-  </div>
-
-  {{-- 勤怠テーブル --}}
   <div class="staff-detail__table-wrapper">
     <table class="staff-detail__table">
       <thead>
@@ -59,12 +59,12 @@
       </tbody>
     </table>
   </div>
+</div>
 
-  {{-- CSV出力ボタン --}}
-  <div class="staff-detail__csv">
-    <form method="GET" action="{{ route('admin.attendance.export_csv', ['id' => $user->id, 'month' => $currentMonth]) }}">
-      <button type="submit" class="staff-detail__csv-button">CSV出力</button>
-    </form>
-  </div>
+{{-- CSV出力ボタン --}}
+<div class="staff-detail__csv--outside">
+  <form method="GET" action="{{ route('admin.attendance.export_csv', ['id' => $user->id, 'month' => $currentMonth->format('Y-m')]) }}">
+    <button type="submit" class="staff-detail__csv-button">CSV出力</button>
+  </form>
 </div>
 @endsection

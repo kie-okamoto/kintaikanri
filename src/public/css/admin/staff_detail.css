@@ -6,34 +6,29 @@ body {
   background-color: #f9f9f9;
 }
 
-/* ==== 白色ブロック全体ラッパー ==== */
-.staff-detail__wrapper {
-  max-width: 1000px;
-  margin: 40px auto;
-  background-color: #fff;
-  padding: 40px 30px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* ==== TITLE ==== */
-.staff-detail__title {
+/* ==== タイトル（白ブロック外） ==== */
+.staff-detail__title--outside {
   font-size: 24px;
   font-weight: bold;
-  margin-bottom: 30px;
+  margin: 40px auto 10px;
   border-left: 6px solid black;
   padding-left: 12px;
+  max-width: 1200px;
 }
 
-/* ==== 月ナビゲーション ==== */
+/* ==== 月ナビゲーション（白ブロック外） ==== */
 .staff-detail__month-nav {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 30px auto 40px;
+  margin: 20px auto 20px;
   font-size: 20px;
   gap: 60px;
   font-weight: bold;
+  max-width: 1200px;
+  background-color: #fff;
+  padding: 16px 32px;
+  border-radius: 10px;
 }
 
 .staff-detail__month-link {
@@ -45,6 +40,38 @@ body {
 .staff-detail__month {
   font-weight: bold;
   font-size: 20px;
+}
+
+/* ==== CSV出力ボタン（白ブロック外右下） ==== */
+.staff-detail__csv--outside {
+  max-width: 1200px;
+  margin: 20px auto 40px;
+  text-align: right;
+}
+
+.staff-detail__csv-button {
+  padding: 10px 20px;
+  background-color: black;
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.staff-detail__csv-button:hover {
+  opacity: 0.8;
+}
+
+/* ==== 白色ブロック全体ラッパー ==== */
+.staff-detail__wrapper {
+  max-width: 1200px;
+  margin: 0 auto 40px;
+  background-color: #fff;
+  padding: 40px 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* ==== TABLE ==== */
@@ -81,26 +108,4 @@ body {
   color: #ccc;
   pointer-events: none;
   text-decoration: none;
-}
-
-/* ==== CSV出力ボタン ==== */
-.staff-detail__csv {
-  text-align: right;
-  max-width: 900px;
-  margin: 0 auto 40px;
-}
-
-.staff-detail__csv-button {
-  padding: 10px 20px;
-  background-color: black;
-  color: white;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
-.staff-detail__csv-button:hover {
-  opacity: 0.8;
 }

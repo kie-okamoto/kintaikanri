@@ -10,7 +10,7 @@ body {
   font-size: 24px;
   font-weight: bold;
   margin: 40px auto 30px;
-  max-width: 1000px;
+  max-width: 1200px;
   border-left: 5px solid #000;
   padding-left: 10px;
 }
@@ -18,7 +18,7 @@ body {
 /* 白いテーブルボックス */
 .staff-list__wrapper {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   background-color: #fff;
   border-radius: 12px;

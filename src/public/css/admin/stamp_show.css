@@ -1,0 +1,71 @@
+body {
+  background-color: #f2f1f6;
+  font-family: "Helvetica Neue", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.stamp-show__title {
+  font-size: 24px;
+  font-weight: bold;
+  border-left: 6px solid black;
+  padding-left: 10px;
+  margin: 40px 0 20px;
+  width: 60%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.stamp-show__card {
+  width: 60%;
+  margin: 0 auto;
+  background-color: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.stamp-show__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stamp-show__table th,
+.stamp-show__table td {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  font-size: 16px;
+}
+
+.stamp-show__table th {
+  width: 30%;
+  background-color: #fff;
+  font-weight: normal;
+}
+
+.stamp-show__table td {
+  width: 70%;
+}
+
+/* ✅ ボタンエリア（カードの下に表示） */
+.stamp-show__approve-area {
+  width: 60%;
+  margin: 20px auto 60px auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.stamp-show__approve-button {
+  background-color: black;
+  color: white;
+  border: none;
+  padding: 12px 40px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.stamp-show__approve-button:hover {
+  opacity: 0.8;
+}

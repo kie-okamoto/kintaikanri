@@ -59,7 +59,7 @@ Carbon::setLocale('ja');
           <td>{{ $attendance->user->name }}</td>
           <td>{{ $attendance->clock_in ? \Carbon\Carbon::parse($attendance->clock_in)->format('H:i') : '-' }}</td>
           <td>{{ $attendance->clock_out ? \Carbon\Carbon::parse($attendance->clock_out)->format('H:i') : '-' }}</td>
-          <td>{{ $attendance->break_duration ? substr($attendance->break_duration, 0, 5) : '-' }}</td>
+          <td>{{ $attendance->calculated_break_duration ?? '-' }}</td>
           <td>{{ $attendance->total_duration ? substr($attendance->total_duration, 0, 5) : '-' }}</td>
           <td><a href="{{ route('admin.attendance.show', $attendance->id) }}" class="admin-attendance__link">詳細</a></td>
         </tr>

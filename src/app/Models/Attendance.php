@@ -67,12 +67,16 @@ class Attendance extends Model
     protected static function booted()
     {
         static::saving(function ($attendance) {
-            // breaks がロード済みでなければロードする
             if (!$attendance->relationLoaded('breaks')) {
                 $attendance->load('breaks');
             }
 
             $attendance->calculateDurations();
         });
+    }
+
+    public function correctionRequest()
+    {
+        return $this->hasOne(AttendanceCorrectionRequest::class);
     }
 }

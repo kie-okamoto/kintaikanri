@@ -43,10 +43,10 @@
           </td>
         </tr>
 
-        {{-- 休憩時間：登録されている分だけ表示 --}}
+        {{-- 休憩時間 --}}
         @foreach ($attendance->breaks as $i => $break)
         <tr>
-          <th>休憩{{ $i + 1 }}</th>
+          <th>{{ $i === 0 ? '休憩' : '休憩' . ($i + 1) }}</th>
           <td>
             <input type="time" name="breaks[{{ $i }}][start]"
               value="{{ optional($break->start)->format('H:i') }}"
@@ -59,7 +59,7 @@
         </tr>
         @endforeach
 
-        {{-- 追加用の空欄を1行だけ表示（承認待ちでないとき） --}}
+        {{-- 追加の空欄（承認待ちでは表示しない） --}}
         @unless($isPending)
         <tr>
           <th>休憩{{ $attendance->breaks->count() + 1 }}</th>
@@ -83,7 +83,7 @@
     </form>
   </div>
 
-  {{-- 修正ボタン --}}
+  {{-- 修正ボタンまたは注意表示 --}}
   @if (!$isPending)
   <div class="show__actions-outside">
     <button type="submit" form="form" class="show__submit">修正</button>
@@ -97,5 +97,5 @@
 @endsection
 
 @section('scripts')
-{{-- JavaScript不要 --}}
+{{-- JavaScript 不要 --}}
 @endsection

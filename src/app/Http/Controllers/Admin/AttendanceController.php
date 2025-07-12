@@ -14,24 +14,45 @@ class AttendanceController extends Controller
     {
         $date = $request->input('date', Carbon::today()->toDateString());
 
-        $attendances = Attendance::with('user')
+        // ユーザーと休憩を読み込む
+        $attendances = Attendance::with(['user', 'breaks'])
             ->where('date', $date)
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // 休憩合計時間を計算して一時プロパティに追加
+        foreach ($attendances as $attendance) {
+            $totalBreakSeconds = $attendance->breaks->sum(function ($break) {
+                if ($break->start && $break->end) {
+                    return Carbon::parse($break->end)->diffInSeconds(Carbon::parse($break->start));
+                }
+                return 0;
+            });
+
+            $attendance->calculated_break_duration = gmdate('H:i', $totalBreakSeconds);
+        }
+
         return view('admin.attendance.index', compact('attendances', 'date'));
     }
 
+
     public function show($id)
     {
-        $attendance = Attendance::with('user')->findOrFail($id);
-        return view('admin.attendance.show', compact('attendance'));
+        // user情報とbreaks、correctionRequestも必要ならwithで追加
+        $attendance = Attendance::with(['user', 'breaks', 'correctionRequest'])->findOrFail($id);
+
+        // 承認ステータスを渡す（Bladeでボタン制御に使う）
+        $isApproved = $attendance->approval_status === 'approved';
+
+        return view('admin.attendance.show', compact('attendance', 'isApproved'));
     }
 
     public function staffList($id)
     {
         $user = User::findOrFail($id);
-        $attendances = Attendance::where('user_id', $id)->orderBy('created_at', 'desc')->paginate(10);
+        $attendances = Attendance::where('user_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
         $date = Carbon::now()->isoFormat('YYYY年MM月DD日（ddd）', 'ja');
 
@@ -98,51 +119,60 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function exportCsv($id)
+    public function exportCsv($id, $month = null)
     {
+        // ユーザー取得
         $user = User::findOrFail($id);
-        $attendances = $user->attendances()->with('breaks')->orderBy('date')->get();
 
+        // 月指定がない場合は今月を使用
+        $month = $month ?? now()->format('Y-m');
+
+        $parsedMonth = \Carbon\Carbon::parse($month);
+
+        // 勤怠データ取得（対象月）
+        $attendances = $user->attendances()
+            ->whereYear('date', $parsedMonth->year)
+            ->whereMonth('date', $parsedMonth->month)
+            ->with('breaks')
+            ->orderBy('date')
+            ->get();
+
+        // CSVヘッダー
         $csvHeader = ['日付', '出勤時間', '退勤時間', '休憩時間合計', '勤務時間合計'];
-        $filename = $user->name . '_attendance.csv';
+        $filename = $user->name . '_attendance_' . $parsedMonth->format('Y-m') . '.csv';
 
+        // ストリームでCSV出力
         $callback = function () use ($attendances, $csvHeader) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $csvHeader);
+            $stream = fopen('php://output', 'w');
+
+            // Excel用：BOM付きで文字化け防止
+            fwrite($stream, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            fputcsv($stream, $csvHeader);
 
             foreach ($attendances as $attendance) {
-                $clockIn = $attendance->clock_in ? \Carbon\Carbon::parse($attendance->clock_in) : null;
-                $clockOut = $attendance->clock_out ? \Carbon\Carbon::parse($attendance->clock_out) : null;
+                $clockIn = optional($attendance->clock_in)->format('H:i');
+                $clockOut = optional($attendance->clock_out)->format('H:i');
 
-                // 休憩時間の合計（秒単位）
-                $breakSeconds = $attendance->breaks->reduce(function ($carry, $break) {
-                    if ($break->start && $break->end) {
-                        return $carry + \Carbon\Carbon::parse($break->end)->diffInSeconds(\Carbon\Carbon::parse($break->start));
-                    }
-                    return $carry;
-                }, 0);
+                $break = $attendance->break_duration ? substr($attendance->break_duration, 0, 5) : '';
+                $total = $attendance->total_duration ? substr($attendance->total_duration, 0, 5) : '';
 
-                // 勤務時間 = 出退勤差分 - 休憩
-                $totalSeconds = 0;
-                if ($clockIn && $clockOut) {
-                    $totalSeconds = $clockOut->diffInSeconds($clockIn) - $breakSeconds;
-                    $totalSeconds = max($totalSeconds, 0);
-                }
-
-                fputcsv($file, [
-                    $attendance->date,
-                    $clockIn ? $clockIn->format('H:i') : '',
-                    $clockOut ? $clockOut->format('H:i') : '',
-                    gmdate('H:i', $breakSeconds),
-                    gmdate('H:i', $totalSeconds),
+                fputcsv($stream, [
+                    \Carbon\Carbon::parse($attendance->date)->format('Y-m-d'),
+                    $clockIn,
+                    $clockOut,
+                    $break,
+                    $total,
                 ]);
             }
 
-            fclose($file);
+            fclose($stream);
         };
 
-        return response()->streamDownload($callback, $filename, [
-            'Content-Type' => 'text/csv',
+        // CSV出力レスポンス
+        return response()->stream($callback, 200, [
+            "Content-Type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename={$filename}",
         ]);
     }
 }

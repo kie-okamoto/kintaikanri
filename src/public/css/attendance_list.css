@@ -29,9 +29,8 @@
   border-radius: 10px;
   padding: 0 32px;
   width: 100%;
-  max-width: 1000px;
+  max-width: 1200px;
   height: 60px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .calendar-nav__button {
@@ -59,7 +58,7 @@
   color: #333;
 }
 
-/* === タブUI（必要に応じて） === */
+/* === タブUI === */
 .list__tabs {
   display: flex;
   border-bottom: 2px solid gray;
@@ -77,20 +76,20 @@
 
 .list__tab--active {
   font-weight: bold;
-  border-bottom: 2px solid black;
+  border-bottom: none;
+  /* ← 選択中のタブは下線なし */
 }
 
 /* === テーブル === */
 .list__table {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   border-collapse: collapse;
   background: #fff;
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  /* カレンダーと一体感UP */
 }
 
 .list__table th,
@@ -116,4 +115,12 @@
 .attendance__link:hover,
 .list__link:hover {
   text-decoration: underline;
+}
+
+/* === 無効リンク（グレー・クリック不可） === */
+.attendance__link--disabled {
+  pointer-events: none;
+  color: gray;
+  text-decoration: none;
+  cursor: default;
 }

@@ -1,106 +1,77 @@
-/* ===== ベーススタイル ===== */
 body {
-  background-color: #f5f5f7;
-  font-family: 'Helvetica Neue', sans-serif;
+  background-color: #f2f1f6;
+  font-family: "Helvetica Neue", sans-serif;
   margin: 0;
   padding: 0;
 }
 
-/* ===== タイトル ===== */
+/* タイトル中央＋左アイコン風 */
 .show__title {
-  text-align: center;
   font-size: 24px;
   font-weight: bold;
-  margin-top: 40px;
+  border-left: 6px solid black;
+  padding-left: 10px;
+  width: fit-content;
+  margin: 40px auto 30px;
 }
 
-/* ===== 全体ラッパー ===== */
-.show-wrapper {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-}
-
-/* ===== 表 ===== */
+/* テーブル全体 */
 .show__table {
-  width: 100%;
+  width: 60%;
+  margin: 0 auto;
   border-collapse: collapse;
-  margin-bottom: 30px;
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* 各セルのデザイン */
+.show__table th,
+.show__table td {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  font-size: 16px;
 }
 
 .show__table th {
-  text-align: left;
-  font-weight: bold;
-  background-color: #f8f8f8;
-  width: 150px;
-  padding: 16px;
-  border-bottom: 1px solid #ccc;
-  vertical-align: middle;
+  width: 30%;
+  background-color: #f9f9f9;
+  font-weight: normal;
 }
 
 .show__table td {
-  padding: 16px;
-  border-bottom: 1px solid #ccc;
-  vertical-align: middle;
+  width: 70%;
 }
 
-/* ===== 日付の表示 ===== */
-.show__date-year,
-.show__date-monthday {
-  font-weight: bold;
-  font-size: 16px;
+/* ボタンの右下寄せ */
+.show__actions-bottom {
+  display: flex;
+  justify-content: flex-end;
+  width: 60%;
+  margin: 30px auto 0;
 }
 
-/* ===== 時間入力フィールド風の表示 ===== */
-input[type="time"] {
-  padding: 8px 12px;
-  font-size: 16px;
-  width: 100px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background-color: #fff;
-}
-
-/* ===== 備考欄 ===== */
-textarea,
-input[type="text"] {
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-sizing: border-box;
-}
-
-/* ===== ボタンエリア ===== */
-.show__actions-outside {
-  text-align: center;
-}
-
-.show__submit {
-  display: inline-block;
-  padding: 10px 24px;
-  background-color: #000;
-  color: #fff;
-  text-decoration: none;
+/* 承認ボタン（通常時） */
+.show__approve-button {
+  background-color: black;
+  color: white;
+  border: none;
+  padding: 12px 40px;
   border-radius: 6px;
   font-size: 16px;
-  transition: background-color 0.3s;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
 }
 
-.show__submit:hover {
-  background-color: #444;
+.show__approve-button:hover {
+  opacity: 0.8;
 }
 
-/* ===== 空欄の時間表示（--:--） ===== */
-.show__blank-time {
-  display: inline-block;
-  width: 100px;
-  color: #aaa;
-  font-size: 16px;
-  text-align: center;
-  font-style: italic;
+/* ✅ 承認済みで disabled の場合の見た目 */
+.show__approve-button:disabled {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+  opacity: 1;
 }

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Models\Attendance;
 use Carbon\Carbon;
+use App\Models\AttendanceCorrectionRequest;
 
 class AttendanceController extends Controller
 {
@@ -79,7 +80,7 @@ class AttendanceController extends Controller
                 $lastBreak->save();
             }
             $attendance->load('breaks');
-            $attendance->save(); // 自動再計算される
+            $attendance->save();
         }
 
         Session::put('attendance_status', 'working');
@@ -98,7 +99,7 @@ class AttendanceController extends Controller
 
         if ($attendance) {
             $attendance->clock_out = Carbon::now();
-            $attendance->save(); // 自動再計算される
+            $attendance->save();
         }
 
         Session::put('attendance_status', 'done');
@@ -112,7 +113,6 @@ class AttendanceController extends Controller
         $startOfMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
-        // 勤怠 + 休憩も取得
         $attendances = Attendance::with('breaks')
             ->where('user_id', auth()->id())
             ->whereBetween('date', [
@@ -120,9 +120,7 @@ class AttendanceController extends Controller
                 $endOfMonth->copy()->endOfDay()
             ])
             ->get()
-            ->keyBy(function ($item) {
-                return Carbon::parse($item->date)->format('Y-m-d');
-            });
+            ->keyBy(fn($item) => Carbon::parse($item->date)->format('Y-m-d'));
 
         $daysInMonth = [];
         for ($date = $startOfMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
@@ -130,16 +128,13 @@ class AttendanceController extends Controller
             if ($attendances->has($dayString)) {
                 $attendance = $attendances->get($dayString);
 
-                // 休憩時間の計算
                 $totalBreakSeconds = $attendance->breaks->sum(function ($break) {
-                    if ($break->start && $break->end) {
-                        return Carbon::parse($break->end)->diffInSeconds(Carbon::parse($break->start));
-                    }
-                    return 0;
+                    return ($break->start && $break->end)
+                        ? Carbon::parse($break->end)->diffInSeconds(Carbon::parse($break->start))
+                        : 0;
                 });
 
                 $attendance->calculated_break_duration = gmdate('H:i', $totalBreakSeconds);
-
                 $daysInMonth[] = $attendance;
             } else {
                 $daysInMonth[] = (object)[
@@ -161,34 +156,39 @@ class AttendanceController extends Controller
 
     public function show($id)
     {
-        $attendance = Attendance::with(['user', 'breaks'])->findOrFail($id);
-        $isPending = $attendance->approval_status === 'pending';
+        $attendance = Attendance::with(['user', 'breaks', 'correctionRequest'])->findOrFail($id);
+
+        // 修正申請が「承認待ち」の場合だけロック
+        $isPending = optional($attendance->correctionRequest)->status === 'pending';
 
         return view('attendance.show', compact('attendance', 'isPending'));
     }
 
     public function updateRequest(Request $request, $id)
     {
+        \Log::info('修正申請処理開始', [
+            'attendance_id' => $id,
+            'reason' => $request->input('note'),
+        ]);
+
         $attendance = Attendance::with('breaks')->findOrFail($id);
 
-        $attendance->clock_in = $request->input('clock_in');
-        $attendance->clock_out = $request->input('clock_out');
-        $attendance->note = $request->input('note');
-        $attendance->approval_status = 'pending';
-        $attendance->save();
-
-        // 休憩の再登録
-        $attendance->breaks()->delete();
-        $breaks = $request->input('breaks', []);
-        foreach ($breaks as $break) {
-            if (!empty($break['start']) && !empty($break['end'])) {
-                $attendance->breaks()->create([
-                    'start' => $break['start'],
-                    'end' => $break['end'],
-                ]);
-            }
+        // すでに「pending」の申請があれば再申請不可
+        if ($attendance->correctionRequest && $attendance->correctionRequest->status === 'pending') {
+            return redirect()->route('attendance.show', $id)
+                ->with('error', 'すでに修正申請が提出されています。承認をお待ちください。');
         }
 
-        return redirect()->route('stamp.list')->with('success', '修正申請を保存しました。');
+        AttendanceCorrectionRequest::create([
+            'attendance_id' => $attendance->id,
+            'reason' => $request->input('note'),
+            'submitted_at' => now(),
+            'status' => 'pending',
+        ]);
+
+        \Log::info('修正申請作成完了');
+
+        return redirect()->route('attendance.show', $id)
+            ->with('success', '修正申請を送信しました。');
     }
 }
