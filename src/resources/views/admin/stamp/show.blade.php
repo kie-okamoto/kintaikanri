@@ -19,6 +19,7 @@
         <th>名前</th>
         <td>{{ $request->attendance->user->name ?? '不明' }}</td>
       </tr>
+
       <tr>
         <th>日付</th>
         <td>
@@ -32,47 +33,59 @@
         </td>
       </tr>
 
+      @php
+      $correctionData = json_decode($request->data, true);
+      @endphp
+
+      {{-- 出勤・退勤 --}}
       <tr>
         <th>出勤・退勤</th>
         <td>
           <span class="show__time-text">
-            {{ optional($request->attendance->clock_in)->format('H:i') ?? '--:--' }}
+            {{ $correctionData['clock_in'] ?? optional($request->attendance->clock_in)->format('H:i') }}
           </span>
           <span class="show__tilde">〜</span>
           <span class="show__time-text">
-            {{ optional($request->attendance->clock_out)->format('H:i') ?? '--:--' }}
+            {{ $correctionData['clock_out'] ?? optional($request->attendance->clock_out)->format('H:i') }}
           </span>
         </td>
       </tr>
 
+      {{-- 休憩 --}}
       @php
-      $breaks = $request->attendance->breaks ?? collect();
-      $maxBreaks = max($breaks->count(), 2); // 最低2行表示
+      $breaks = $correctionData['breaks'] ?? ($request->attendance->breaks ?? collect());
+      $maxBreaks = max(is_array($breaks) ? count($breaks) : $breaks->count(), 2);
       @endphp
 
       @for ($i = 0; $i < $maxBreaks; $i++)
         <tr>
         <th>{{ $i === 0 ? '休憩' : '休憩' . ($i + 1) }}</th>
         <td>
-          @if (isset($breaks[$i]))
-          <span class="show__time-text">
-            {{ \Carbon\Carbon::parse($breaks[$i]->start)->format('H:i') }}
-          </span>
+          @php
+          $start = isset($breaks[$i]['start'])
+          ? $breaks[$i]['start']
+          : (isset($breaks[$i]->start) ? $breaks[$i]->start : null);
+
+          $end = isset($breaks[$i]['end'])
+          ? $breaks[$i]['end']
+          : (isset($breaks[$i]->end) ? $breaks[$i]->end : null);
+          @endphp
+
+          @if ($start && $end)
+          <span class="show__time-text">{{ \Carbon\Carbon::parse($start)->format('H:i') }}</span>
           <span class="show__tilde">〜</span>
-          <span class="show__time-text">
-            {{ \Carbon\Carbon::parse($breaks[$i]->end)->format('H:i') }}
-          </span>
+          <span class="show__time-text">{{ \Carbon\Carbon::parse($end)->format('H:i') }}</span>
           @else
-          {{-- 空欄：時間も〜もなし --}}
           <span class="show__time-text">&nbsp;</span>
           @endif
         </td>
         </tr>
         @endfor
 
+        {{-- 備考 --}}
         <tr>
           <th>備考</th>
-          <td>{{ $request->reason }}</td>
+          <td>{{ $correctionData['note'] ?? $request->reason }}</td>
         </tr>
     </table>
   </div>
