@@ -95,13 +95,15 @@ Route::middleware('guest:admin')->prefix('admin')->name('admin.')->group(functio
 | 管理者：ログアウト＆各機能（管理者認証必須）
 |--------------------------------------------------------------------------
 */
+// 管理者：ログアウト＆各機能（管理者認証必須）
 Route::prefix('admin')->name('admin.')->middleware('auth:admin')->group(function () {
     // ログアウト
     Route::post('/logout', [AdminLoginController::class, 'logout'])->name('logout');
 
-    // 勤怠一覧・詳細（?tab=admin）
+    // 勤怠一覧・詳細・修正
     Route::get('/attendance/list', [AdminAttendanceController::class, 'index'])->name('attendance.list');
     Route::get('/attendance/{id}', [AdminAttendanceController::class, 'show'])->name('attendance.show');
+    Route::post('/attendance/{id}/update', [AdminAttendanceController::class, 'update'])->name('attendance.update');
 
     // スタッフ一覧・スタッフ別勤怠・CSV
     Route::get('/staff/list', [AdminStaffController::class, 'index'])->name('staff.list');
@@ -109,8 +111,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin')->group(function
     Route::get('/attendance/staff/{id}/detail', [AdminAttendanceController::class, 'staffDetail'])->name('attendance.staff_detail');
     Route::get('/attendance/staff/{id}/export/{month?}', [AdminAttendanceController::class, 'exportCsv'])->name('attendance.export_csv');
 
-
-    // 申請一覧・詳細・承認（?tab=admin）
+    // 申請一覧・詳細・承認
     Route::get('/stamp_correction_request/list', [AdminStampController::class, 'index'])->name('stamp.list');
     Route::get('/stamp_correction_request/{id}', [AdminStampController::class, 'show'])->name('stamp_correction_request.show');
     Route::post('/stamp_correction_request/approve/{id}', [AdminStampController::class, 'approve'])->name('stamp.approve');

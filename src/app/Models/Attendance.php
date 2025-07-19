@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
+use App\Models\StampCorrectionRequest;
 
 class Attendance extends Model
 {
@@ -19,12 +20,14 @@ class Attendance extends Model
         'total_duration',
         'note',
         'approval_status',
+        'is_fixed',
     ];
 
     protected $casts = [
         'clock_in' => 'datetime',
         'clock_out' => 'datetime',
         'date' => 'date',
+        'is_fixed' => 'boolean', // ← ✅ 追加（true/false扱いに）
     ];
 
     // ユーザーとのリレーション
@@ -77,6 +80,7 @@ class Attendance extends Model
 
     public function correctionRequest()
     {
-        return $this->hasOne(AttendanceCorrectionRequest::class);
+        return $this->hasOne(\App\Models\AttendanceCorrectionRequest::class)
+            ->where('status', 'pending');
     }
 }

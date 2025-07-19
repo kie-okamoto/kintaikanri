@@ -24,6 +24,9 @@
   <main class="admin-main">
     @yield('content')
   </main>
+
+  {{-- ページ固有のJavaScript --}}
+  @yield('scripts')
 </body>
 
 </html>

@@ -8,6 +8,10 @@ body {
   line-height: 1.6;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 /* ===== 白背景にしたいページ（ログイン・登録・認証） ===== */
 body.auth-page {
   background-color: #ffffff;
@@ -32,6 +36,14 @@ body.auth-page {
 .header__logo {
   width: 370px;
   height: 36px;
+  display: block;
+  vertical-align: middle;
+}
+
+.header__left {
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 /* ===== PC幅固定（1400〜1540px）対応 ===== */

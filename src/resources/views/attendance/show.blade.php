@@ -25,77 +25,89 @@
         <tr>
           <th>日付</th>
           <td>
-            <span class="show__date-year">{{ \Carbon\Carbon::parse($attendance->date)->year }}年</span>
-            <span class="show__date-monthday">{{ \Carbon\Carbon::parse($attendance->date)->format('n月j日') }}</span>
+            <div class="show__date-row">
+              <div class="show__date-year">{{ \Carbon\Carbon::parse($attendance->date)->year }}年</div>
+              <div class="show__date-monthday">{{ \Carbon\Carbon::parse($attendance->date)->format('n月j日') }}</div>
+            </div>
           </td>
         </tr>
 
+        {{-- 出勤・退勤 --}}
         <tr>
           <th>出勤・退勤</th>
           <td>
-            <input type="time" name="clock_in"
-              value="{{ optional($attendance->clock_in)->format('H:i') }}"
-              class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
-            <span class="show__tilde">〜</span>
-            <input type="time" name="clock_out"
-              value="{{ optional($attendance->clock_out)->format('H:i') }}"
-              class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
+            <div class="show__time-row">
+              <input type="time" name="clock_in" value="{{ old('clock_in', optional($attendance->clock_in)->format('H:i')) }}"
+                class="show__time-input no-clock" @if($isPending) disabled @endif>
+              @if($isPending)
+              <input type="hidden" name="clock_in" value="{{ old('clock_in', optional($attendance->clock_in)->format('H:i')) }}">
+              @endif
+
+              <span class="show__tilde">〜</span>
+
+              <input type="time" name="clock_out" value="{{ old('clock_out', optional($attendance->clock_out)->format('H:i')) }}"
+                class="show__time-input no-clock" @if($isPending) disabled @endif>
+              @if($isPending)
+              <input type="hidden" name="clock_out" value="{{ old('clock_out', optional($attendance->clock_out)->format('H:i')) }}">
+              @endif
+            </div>
           </td>
         </tr>
 
-        {{-- 休憩時間 --}}
-        @foreach ($attendance->breaks as $i => $break)
-        <tr>
-          <th>{{ $i === 0 ? '休憩' : '休憩' . ($i + 1) }}</th>
-          <td>
-            <input type="time" name="breaks[{{ $i }}][start]"
-              value="{{ optional($break->start)->format('H:i') }}"
-              class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
-            <span class="show__tilde">〜</span>
-            <input type="time" name="breaks[{{ $i }}][end]"
-              value="{{ optional($break->end)->format('H:i') }}"
-              class="show__time-input" {{ $isPending ? 'readonly' : '' }}>
-          </td>
-        </tr>
-        @endforeach
+        {{-- 休憩 --}}
+        @php $breakCount = $attendance->breaks->count(); @endphp
+        @for ($i = 0; $i < $breakCount + ($isPending ? 0 : 1); $i++)
+          @php
+          $startValue=old("breaks.{$i}.start", isset($attendance->breaks[$i]) && $attendance->breaks[$i]->start ? $attendance->breaks[$i]->start->format('H:i') : '');
+          $endValue = old("breaks.{$i}.end", isset($attendance->breaks[$i]) && $attendance->breaks[$i]->end ? $attendance->breaks[$i]->end->format('H:i') : '');
+          @endphp
+          <tr>
+            <th>{{ $i === 0 ? '休憩' : '休憩' . ($i + 1) }}</th>
+            <td>
+              <div class="show__time-row">
+                <input type="time" name="breaks[{{ $i }}][start]" value="{{ $startValue }}"
+                  class="show__time-input no-clock" @if($isPending) disabled @endif>
+                @if($isPending)
+                <input type="hidden" name="breaks[{{ $i }}][start]" value="{{ $startValue }}">
+                @endif
 
-        {{-- 追加の空欄（承認待ちでは表示しない） --}}
-        @unless($isPending)
-        <tr>
-          <th>休憩{{ $attendance->breaks->count() + 1 }}</th>
-          <td>
-            <input type="time" name="breaks[{{ $attendance->breaks->count() }}][start]" class="show__time-input">
-            <span class="show__tilde">〜</span>
-            <input type="time" name="breaks[{{ $attendance->breaks->count() }}][end]" class="show__time-input">
-          </td>
-        </tr>
-        @endunless
+                <span class="show__tilde">〜</span>
 
-        <tr>
-          <th>備考</th>
-          <td>
-            <input type="text" name="note"
-              value="{{ old('note', $attendance->note ?? '') }}"
-              class="show__note-input" {{ $isPending ? 'readonly' : '' }}>
-          </td>
-        </tr>
+                <input type="time" name="breaks[{{ $i }}][end]" value="{{ $endValue }}"
+                  class="show__time-input no-clock" @if($isPending) disabled @endif>
+                @if($isPending)
+                <input type="hidden" name="breaks[{{ $i }}][end]" value="{{ $endValue }}">
+                @endif
+              </div>
+            </td>
+          </tr>
+          @endfor
+
+          {{-- 備考 --}}
+          <tr>
+            <th>備考</th>
+            <td>
+              <div class="show__time-row">
+                <input type="text" name="note" value="{{ old('note', $attendance->note ?? '') }}"
+                  class="show__note-input" @if($isPending) disabled @endif>
+                @if($isPending)
+                <input type="hidden" name="note" value="{{ old('note', $attendance->note ?? '') }}">
+                @endif
+              </div>
+            </td>
+          </tr>
       </table>
     </form>
   </div>
-
-  {{-- 修正ボタンまたは注意表示 --}}
-  @if (!$isPending)
-  <div class="show__actions-outside">
-    <button type="submit" form="form" class="show__submit">修正</button>
-  </div>
-  @else
-  <div class="show__note-warning-wrapper">
-    <p class="show__note-warning">※承認待ちのため修正はできません。</p>
-  </div>
-  @endif
 </div>
-@endsection
 
-@section('scripts')
-{{-- JavaScript 不要 --}}
+@if ($isPending)
+<div class="show__note-warning-wrapper">
+  <p class="show__note-warning">※承認待ちのため修正はできません。</p>
+</div>
+@else
+<div class="show__button-outside">
+  <button type="submit" form="form" class="show__submit">修正</button>
+</div>
+@endif
 @endsection

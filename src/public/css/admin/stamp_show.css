@@ -1,3 +1,4 @@
+/* ===== 共通設定 ===== */
 body {
   background-color: #f2f1f6;
   font-family: "Helvetica Neue", sans-serif;
@@ -5,6 +6,7 @@ body {
   padding: 0;
 }
 
+/* ===== タイトル見出し ===== */
 .stamp-show__title {
   font-size: 24px;
   font-weight: bold;
@@ -16,38 +18,81 @@ body {
   margin-right: auto;
 }
 
+/* ===== 白背景ブロック ===== */
 .stamp-show__card {
   width: 60%;
   margin: 0 auto;
   background-color: #fff;
   border-radius: 10px;
-  overflow: hidden;
+  padding: 40px 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* ===== テーブル全体 ===== */
 .stamp-show__table {
   width: 100%;
   border-collapse: collapse;
-}
-
-.stamp-show__table th,
-.stamp-show__table td {
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
   font-size: 16px;
+  line-height: 1.8;
 }
 
+/* ===== 見出しセル（左側） ===== */
 .stamp-show__table th {
   width: 30%;
+  text-align: left;
+  padding: 16px 10px;
+  font-weight: bold;
+  vertical-align: middle;
   background-color: #fff;
-  font-weight: normal;
+  border-bottom: 1px solid #ddd;
 }
 
+/* ===== 内容セル（右側） ===== */
 .stamp-show__table td {
   width: 70%;
+  padding: 16px 10px;
+  vertical-align: middle;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
 }
 
-/* ✅ ボタンエリア（カードの下に表示） */
+/* ===== 時間表示（左揃えに修正） ===== */
+.show__time-text {
+  display: inline-block;
+  min-width: 50px;
+  text-align: left;
+}
+
+/* ===== チルダ（〜）左揃え ===== */
+.show__tilde {
+  display: inline-block;
+  margin: 0 30px;
+  text-align: left;
+}
+
+/* ===== 未入力時間用のグレー表示（左揃えに修正） ===== */
+.show__blank-time {
+  color: #999;
+  font-style: italic;
+  min-width: 50px;
+  display: inline-block;
+  text-align: left;
+}
+
+/* ===== 日付（年・月日）を左揃えで幅揃え ===== */
+.date__year {
+  display: inline-block;
+  min-width: 50px;
+  text-align: left;
+}
+
+.date__month-day {
+  display: inline-block;
+  min-width: 50px;
+  text-align: left;
+}
+
+/* ===== 承認ボタンエリア ===== */
 .stamp-show__approve-area {
   width: 60%;
   margin: 20px auto 60px auto;
@@ -55,6 +100,7 @@ body {
   justify-content: flex-end;
 }
 
+/* ===== 承認ボタン ===== */
 .stamp-show__approve-button {
   background-color: black;
   color: white;
@@ -68,4 +114,11 @@ body {
 
 .stamp-show__approve-button:hover {
   opacity: 0.8;
+}
+
+/* ===== 承認済みボタンの状態 ===== */
+.stamp-show__approve-button.approved {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
 }

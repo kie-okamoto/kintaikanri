@@ -48,100 +48,100 @@ body {
   padding: 20px 40px 20px 20px;
 }
 
+.show__date-row {
+  display: flex;
+  align-items: center;
+  gap: 150px;
+}
+
 .show__date-year,
 .show__date-monthday {
   font-weight: bold;
   font-size: 18px;
-  margin-right: 10px;
+}
+
+.show__time-row {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.show__tilde {
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
 }
 
 .show__time-input {
   width: 100px;
   padding: 6px 8px;
   font-size: 16px;
-  margin-right: 40px;
   color: #333;
   border: 1px solid #ccc;
   border-radius: 4px;
+  text-align: center;
 }
 
+input[type="time"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+input[type="time"]::-webkit-inner-spin-button,
 input[type="time"]::-webkit-calendar-picker-indicator {
   display: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .show__note-input {
-  width: 600px;
-  padding: 8px;
+  width: 295px;
+  height: 60px;
+  padding: 6px 8px;
   font-size: 16px;
   color: #333;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-.show__actions-fixed {
+/* 修正ボタン外側配置 */
+.show__button-outside {
+  max-width: 1200px;
+  margin: 0 auto 80px auto;
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
-  margin-right: 20px;
 }
 
+/* 修正ボタンのデザイン */
 .show__submit {
   padding: 12px 40px;
   font-size: 16px;
-  background-color: black;
+  font-weight: bold;
   color: white;
+  background-color: black;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s;
 }
 
 .show__submit:hover {
   background-color: #333;
 }
 
-.show-wrapper {
-  position: relative;
-  max-width: 1200px;
-  margin: 40px auto;
-  padding-bottom: 80px;
-}
-
-.show__actions-outside {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 30px;
-}
-
-.show__tilde {
-  display: inline-block;
-  margin-right: 40px;
-  font-weight: bold;
-  color: #333;
-}
-
-.show__break-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.show__date-wrapper {
-  display: flex;
-  align-items: center;
-  height: 60px;
-}
-
-/* ✅ 承認待ちメッセージ：テーブル外・右寄せに表示 */
+/* 承認待ちメッセージ */
 .show__note-warning-wrapper {
+  width: 100%;
+  margin: 20px auto 80px;
   text-align: right;
-  margin-top: 10px;
-  margin-right: 20px;
+  max-width: 1200px;
+  padding: 0 20px;
 }
 
 .show__note-warning {
-  color: #e6587c;
-  font-size: 16px;
+  color: #cc0000;
+  font-size: 18px;
   margin: 0;
 }

@@ -15,6 +15,7 @@ class StampCorrectionRequest extends Model
         'reason',
         'requested_at',
         'status',
+        'note',
     ];
 
     // リレーション（ユーザー）

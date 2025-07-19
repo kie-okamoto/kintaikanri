@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\StampCorrectionRequest;
 
 class AttendanceController extends Controller
 {
@@ -14,13 +15,11 @@ class AttendanceController extends Controller
     {
         $date = $request->input('date', Carbon::today()->toDateString());
 
-        // ユーザーと休憩を読み込む
         $attendances = Attendance::with(['user', 'breaks'])
             ->where('date', $date)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // 休憩合計時間を計算して一時プロパティに追加
         foreach ($attendances as $attendance) {
             $totalBreakSeconds = $attendance->breaks->sum(function ($break) {
                 if ($break->start && $break->end) {
@@ -35,16 +34,77 @@ class AttendanceController extends Controller
         return view('admin.attendance.index', compact('attendances', 'date'));
     }
 
-
     public function show($id)
     {
-        // user情報とbreaks、correctionRequestも必要ならwithで追加
-        $attendance = Attendance::with(['user', 'breaks', 'correctionRequest'])->findOrFail($id);
-
-        // 承認ステータスを渡す（Bladeでボタン制御に使う）
+        $attendance = Attendance::with(['user', 'breaks'])->findOrFail($id);
         $isApproved = $attendance->approval_status === 'approved';
 
-        return view('admin.attendance.show', compact('attendance', 'isApproved'));
+        $correction = StampCorrectionRequest::where('user_id', $attendance->user_id)
+            ->where('target_date', $attendance->date)
+            ->first();
+
+        return view('admin.attendance.show', compact('attendance', 'isApproved', 'correction'));
+    }
+
+
+    public function update(Request $request, $id)
+    {
+        $attendance = Attendance::with(['breaks', 'correctionRequest'])->findOrFail($id);
+
+        // 承認済は編集不可
+        if ($attendance->approval_status === 'approved') {
+            return redirect()
+                ->route('admin.attendance.show', $attendance->id)
+                ->with('error', 'この勤怠は既に承認済みのため、再修正はできません。');
+        }
+
+        $request->validate([
+            'clock_in' => 'nullable|date_format:H:i',
+            'clock_out' => 'nullable|date_format:H:i',
+            'note' => 'nullable|string|max:255',
+            'breaks.*.start' => 'nullable|date_format:H:i',
+            'breaks.*.end' => 'nullable|date_format:H:i',
+        ]);
+
+        $attendance->clock_in = $request->input('clock_in');
+        $attendance->clock_out = $request->input('clock_out');
+        $attendance->note = $request->input('note');
+        $attendance->is_fixed = true;
+
+        // 休憩再登録
+        $attendance->breaks()->delete();
+        if ($request->has('breaks')) {
+            foreach ($request->input('breaks') as $break) {
+                if (!empty($break['start']) || !empty($break['end'])) {
+                    $attendance->breaks()->create([
+                        'start' => $break['start'] ?? null,
+                        'end' => $break['end'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        $attendance->save();
+
+        // 修正申請が存在し、承認待ちなら申請内容も更新
+        if ($attendance->approval_status === 'pending') {
+            $correctionRequest = StampCorrectionRequest::where('user_id', $attendance->user_id)
+                ->where('target_date', $attendance->date)
+                ->first();
+
+            if ($correctionRequest) {
+                $correctionRequest->update([
+                    'clock_in' => $attendance->clock_in,
+                    'clock_out' => $attendance->clock_out,
+                    'note' => $attendance->note,
+                ]);
+            }
+        }
+
+
+        return redirect()
+            ->route('admin.attendance.show', $attendance->id)
+            ->with('status', 'updated');
     }
 
     public function staffList($id)
@@ -82,23 +142,18 @@ class AttendanceController extends Controller
                 return Carbon::parse($a->date)->toDateString() === $date;
             });
 
-            if ($existing) {
-                $attendance = $existing;
-            } else {
-                $attendance = new Attendance([
-                    'date' => $date,
-                    'clock_in' => null,
-                    'clock_out' => null,
-                    'break_duration' => null,
-                    'total_duration' => null,
-                ]);
-            }
+            $attendance = $existing ?: new Attendance([
+                'date' => $date,
+                'clock_in' => null,
+                'clock_out' => null,
+                'break_duration' => null,
+                'total_duration' => null,
+            ]);
 
             if (method_exists($attendance, 'calculateDurations')) {
                 $attendance->calculateDurations();
             }
 
-            // ▼ ここで時刻を整形して渡す（nullでもOK）
             $attendance->formatted_clock_in = $attendance->clock_in
                 ? Carbon::parse($attendance->clock_in)->format('H:i')
                 : '';
@@ -121,15 +176,10 @@ class AttendanceController extends Controller
 
     public function exportCsv($id, $month = null)
     {
-        // ユーザー取得
         $user = User::findOrFail($id);
-
-        // 月指定がない場合は今月を使用
         $month = $month ?? now()->format('Y-m');
+        $parsedMonth = Carbon::parse($month);
 
-        $parsedMonth = \Carbon\Carbon::parse($month);
-
-        // 勤怠データ取得（対象月）
         $attendances = $user->attendances()
             ->whereYear('date', $parsedMonth->year)
             ->whereMonth('date', $parsedMonth->month)
@@ -137,17 +187,12 @@ class AttendanceController extends Controller
             ->orderBy('date')
             ->get();
 
-        // CSVヘッダー
         $csvHeader = ['日付', '出勤時間', '退勤時間', '休憩時間合計', '勤務時間合計'];
         $filename = $user->name . '_attendance_' . $parsedMonth->format('Y-m') . '.csv';
 
-        // ストリームでCSV出力
         $callback = function () use ($attendances, $csvHeader) {
             $stream = fopen('php://output', 'w');
-
-            // Excel用：BOM付きで文字化け防止
             fwrite($stream, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
             fputcsv($stream, $csvHeader);
 
             foreach ($attendances as $attendance) {
@@ -158,7 +203,7 @@ class AttendanceController extends Controller
                 $total = $attendance->total_duration ? substr($attendance->total_duration, 0, 5) : '';
 
                 fputcsv($stream, [
-                    \Carbon\Carbon::parse($attendance->date)->format('Y-m-d'),
+                    Carbon::parse($attendance->date)->format('Y-m-d'),
                     $clockIn,
                     $clockOut,
                     $break,
@@ -169,7 +214,6 @@ class AttendanceController extends Controller
             fclose($stream);
         };
 
-        // CSV出力レスポンス
         return response()->stream($callback, 200, [
             "Content-Type" => "text/csv; charset=UTF-8",
             "Content-Disposition" => "attachment; filename={$filename}",
