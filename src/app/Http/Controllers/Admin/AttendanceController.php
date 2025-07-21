@@ -37,14 +37,46 @@ class AttendanceController extends Controller
     public function show($id)
     {
         $attendance = Attendance::with(['user', 'breaks'])->findOrFail($id);
+
+        // 勤怠が「承認済み」かどうか判定（ボタン表示制御用）
         $isApproved = $attendance->approval_status === 'approved';
 
+        // 該当ユーザーの修正申請データを取得
         $correction = StampCorrectionRequest::where('user_id', $attendance->user_id)
             ->where('target_date', $attendance->date)
             ->first();
 
+        // 修正申請中かつデータが存在する場合、仮反映する
+        if ($correction && $correction->status === 'pending' && $correction->data) {
+            $data = json_decode($correction->data, true);
+
+            // 出退勤
+            if (!empty($data['clock_in'])) {
+                $attendance->clock_in = \Carbon\Carbon::parse($data['clock_in']);
+            }
+            if (!empty($data['clock_out'])) {
+                $attendance->clock_out = \Carbon\Carbon::parse($data['clock_out']);
+            }
+
+            // 備考
+            if (array_key_exists('note', $data)) {
+                $attendance->note = $data['note'];
+            }
+
+            // 休憩（配列→コレクションにしてbreaksに仮反映）
+            if (!empty($data['breaks']) && is_array($data['breaks'])) {
+                $attendance->setRelation('breaks', collect($data['breaks'])->map(function ($break) {
+                    return (object)[
+                        'start' => !empty($break['start']) ? \Carbon\Carbon::parse($break['start']) : null,
+                        'end'   => !empty($break['end']) ? \Carbon\Carbon::parse($break['end']) : null,
+                    ];
+                }));
+            }
+        }
+
         return view('admin.attendance.show', compact('attendance', 'isApproved', 'correction'));
     }
+
 
 
     public function update(Request $request, $id)

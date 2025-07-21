@@ -6,11 +6,13 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Requests\AdminLoginRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
 use Illuminate\Auth\Events\Verified;
@@ -24,23 +26,23 @@ class FortifyServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // 各種 Fortify アクション
+        // 一般ユーザーの Fortify 処理
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
-        // ログイン画面の Blade 指定
+        // ログイン画面（一般ユーザー）
         Fortify::loginView(function () {
             return view('auth.login');
         });
 
-        // 登録画面の Blade 指定
+        // 会員登録画面（一般ユーザー）
         Fortify::registerView(function () {
             return view('auth.register');
         });
 
-        // メール認証画面の Blade 指定
+        // メール認証画面（一般ユーザー）
         Fortify::verifyEmailView(function () {
             return view('auth.verify-email');
         });
@@ -50,7 +52,27 @@ class FortifyServiceProvider extends ServiceProvider
             session()->put('verified_from_email', true);
         });
 
-        // レート制限（ログイン）
+        // ✅ 管理者ログイン処理（FormRequestでバリデーション）
+        Fortify::authenticateUsing(function (Request $request) {
+            // 一般ユーザー用 guard のみ通過させる
+            if ($request->is('admin/*')) {
+                return null;
+            }
+
+            $user = \App\Models\User::where('email', $request->email)->first();
+
+            if (
+                $user &&
+                \Hash::check($request->password, $user->password) &&
+                $user->hasVerifiedEmail()
+            ) {
+                return $user;
+            }
+
+            return null;
+        });
+
+        // ✅ レート制限（一般ユーザーと管理者共通）
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(
                 Str::lower($request->input(Fortify::username())) . '|' . $request->ip()
@@ -58,7 +80,6 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($throttleKey);
         });
 
-        // レート制限（二段階認証）
         RateLimiter::for('two-factor', function (Request $request) {
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });

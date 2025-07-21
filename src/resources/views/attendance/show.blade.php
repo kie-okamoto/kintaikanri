@@ -51,11 +51,19 @@
               <input type="hidden" name="clock_out" value="{{ old('clock_out', optional($attendance->clock_out)->format('H:i')) }}">
               @endif
             </div>
+
+            {{-- 出退勤共通エラー表示：clock_inだけにまとめる --}}
+            @if ($errors->has('clock_in'))
+            @foreach ($errors->get('clock_in') as $message)
+            <div class="show__error">{{ $message }}</div>
+            @break {{-- 1回だけ表示したい場合は @break --}}
+            @endforeach
+            @endif
           </td>
         </tr>
 
+
         {{-- 休憩 --}}
-        @php $breakCount = $attendance->breaks->count(); @endphp
         @for ($i = 0; $i < $breakCount + ($isPending ? 0 : 1); $i++)
           @php
           $startValue=old("breaks.{$i}.start", isset($attendance->breaks[$i]) && $attendance->breaks[$i]->start ? $attendance->breaks[$i]->start->format('H:i') : '');
@@ -79,6 +87,15 @@
                 <input type="hidden" name="breaks[{{ $i }}][end]" value="{{ $endValue }}">
                 @endif
               </div>
+
+              {{-- エラーメッセージ表示 --}}
+              @foreach (['start', 'end'] as $key)
+              @if ($errors->has("breaks.{$i}.{$key}"))
+              @foreach ($errors->get("breaks.{$i}.{$key}") as $message)
+              <div class="show__error">{{ $message }}</div>
+              @endforeach
+              @endif
+              @endforeach
             </td>
           </tr>
           @endfor
@@ -94,7 +111,15 @@
                 <input type="hidden" name="note" value="{{ old('note', $attendance->note ?? '') }}">
                 @endif
               </div>
+
+              {{-- エラーメッセージ表示 --}}
+              @foreach ($errors->get('note') as $message)
+              <div class="show__error">{{ $message }}</div>
+              @endforeach
             </td>
+          </tr>
+
+          </td>
           </tr>
       </table>
     </form>

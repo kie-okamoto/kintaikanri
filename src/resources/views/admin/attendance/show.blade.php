@@ -51,13 +51,34 @@
           <th>{{ $i === 0 ? '休憩' : '休憩' . ($i + 1) }}</th>
           <td>
             <div class="show__time-row">
-              <input type="time" name="breaks[{{ $i }}][start]" value="{{ optional($attendance->breaks[$i]->start ?? null)->format('H:i') }}" class="show__time-input no-clock">
+              <input
+                type="time"
+                name="breaks[{{ $i }}][start]"
+                value="{{ old("breaks.$i.start", optional($attendance->breaks[$i]->start ?? null)->format('H:i')) }}"
+                class="show__time-input no-clock">
+
               <span class="show__tilde">〜</span>
-              <input type="time" name="breaks[{{ $i }}][end]" value="{{ optional($attendance->breaks[$i]->end ?? null)->format('H:i') }}" class="show__time-input no-clock">
+
+              <input
+                type="time"
+                name="breaks[{{ $i }}][end]"
+                value="{{ old("breaks.$i.end", optional($attendance->breaks[$i]->end ?? null)->format('H:i')) }}"
+                class="show__time-input no-clock">
             </div>
+
+            {{-- エラー表示：開始時刻 --}}
+            @error("breaks.$i.start")
+            <div class="error">{{ $message }}</div>
+            @enderror
+
+            {{-- エラー表示：終了時刻 --}}
+            @error("breaks.$i.end")
+            <div class="error">{{ $message }}</div>
+            @enderror
           </td>
           </tr>
           @endfor
+
 
           <tr>
             <th>備考</th>
@@ -65,6 +86,11 @@
               <div class="show__time-row">
                 <input type="text" name="note" value="{{ old('note', $attendance->note ?? '') }}" class="show__note-input">
               </div>
+
+              {{-- エラーメッセージ表示 --}}
+              @error('note')
+              <div class="error">{{ $message }}</div>
+              @enderror
             </td>
           </tr>
       </table>
@@ -72,23 +98,21 @@
   </div>
 </div>
 
-{{-- ✅ 修正ボタン（承認済なら非表示） --}}
-@if (!$isApproved)
+{{-- ✅ 修正ボタン（常に表示。ただし承認済・修正済なら無効化） --}}
 <div class="show__submit-wrapper">
   @php
-  $isFixed = session('status') === 'updated' || $attendance->is_fixed;
+  $isDisabled = $isApproved || $attendance->is_fixed;
   @endphp
 
   <button
     type="button"
     class="show__submit"
     id="submitBtn"
-    @if($isFixed) disabled @endif
-    style="{{ $isFixed ? 'background-color: #ccc; color: #666; cursor: not-allowed;' : '' }}">
-    {{ $isFixed ? '修正済' : '修正' }}
+    @if($isDisabled) disabled @endif
+    style="{{ $isDisabled ? 'background-color: #ccc; color: #666; cursor: not-allowed;' : '' }}">
+    {{ $isDisabled ? '修正済' : '修正' }}
   </button>
 </div>
-@endif
 @endsection
 
 @section('scripts')

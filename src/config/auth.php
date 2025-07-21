@@ -3,35 +3,35 @@
 return [
 
     'defaults' => [
-        'guard' => 'web',           // デフォルトは一般ユーザー用
+        'guard' => 'web',           // デフォルトは一般ユーザー
         'passwords' => 'users',
     ],
 
-    // ▼ 認証ガードの設定（user, admin を分離）
+    // ▼ 認証ガード（users用とadmins用を分離）
     'guards' => [
-        'web' => [
+        'web' => [                  // 一般ユーザー用
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'admin' => [ // ★追加：管理者用ガード
+        'admin' => [                // 管理者用
             'driver' => 'session',
             'provider' => 'admins',
         ],
     ],
 
-    // ▼ ユーザープロバイダの設定
+    // ▼ ユーザープロバイダ（データ取得元）
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
         ],
-        'admins' => [ // ★追加：管理者モデル
+        'admins' => [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class,
         ],
     ],
 
-    // ▼ パスワードリセット設定（必要なら admin 用も個別設定可能）
+    // ▼ パスワードリセット設定（users用のみ定義）
     'passwords' => [
         'users' => [
             'provider' => 'users',
@@ -39,7 +39,7 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
-        // 任意：admin 用パスワードリセット（未使用なら不要）
+        // 管理者のパスワードリセットが必要なら以下を有効にする
         // 'admins' => [
         //     'provider' => 'admins',
         //     'table' => 'password_resets',
@@ -48,7 +48,7 @@ return [
         // ],
     ],
 
-    // ▼ パスワード確認の有効時間（秒）
+    // ▼ パスワード確認の有効時間（デフォルト 3時間）
     'password_timeout' => 10800,
 
 ];

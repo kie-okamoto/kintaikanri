@@ -131,6 +131,12 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   background-color: #333;
 }
 
+.show__error {
+  color: red;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
 /* 承認待ちメッセージ */
 .show__note-warning-wrapper {
   width: 100%;

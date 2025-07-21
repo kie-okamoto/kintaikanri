@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Session;
 use App\Models\Attendance;
 use Carbon\Carbon;
 use App\Models\AttendanceCorrectionRequest;
+use App\Http\Requests\AttendanceUpdateRequest;
 
 class AttendanceController extends Controller
 {
@@ -21,7 +22,25 @@ class AttendanceController extends Controller
         Carbon::setLocale('ja');
         $today = Carbon::now()->isoFormat('YYYY年M月D日(ddd)');
         $time = Carbon::now()->format('H:i');
-        $status = Session::get('attendance_status', 'off');
+
+        $user = Auth::user();
+        $todayDate = Carbon::today()->toDateString();
+
+        $attendance = Attendance::where('user_id', $user->id)
+            ->where('date', $todayDate)
+            ->with('breaks')
+            ->first();
+
+        // DBベースでステータスを判定
+        if (!$attendance) {
+            $status = 'off'; // 未出勤
+        } elseif ($attendance->clock_out) {
+            $status = 'done'; // 退勤済み
+        } elseif ($attendance->breaks()->whereNull('end')->exists()) {
+            $status = 'break'; // 休憩中
+        } else {
+            $status = 'working'; // 出勤中
+        }
 
         return view('attendance.register', [
             'status' => $status,
@@ -30,19 +49,34 @@ class AttendanceController extends Controller
         ]);
     }
 
+
     public function start(Request $request)
     {
         $user = Auth::user();
         $today = Carbon::today()->toDateString();
 
-        Attendance::updateOrCreate(
-            ['user_id' => $user->id, 'date' => $today],
-            ['clock_in' => Carbon::now()]
-        );
+        // すでに本日出勤済みか確認
+        $alreadyClockedIn = Attendance::where('user_id', $user->id)
+            ->where('date', $today)
+            ->whereNotNull('clock_in')
+            ->exists();
 
-        Session::put('attendance_status', 'working');
+        if ($alreadyClockedIn) {
+            return redirect()->route('attendance.register');
+        }
+
+        // 出勤を記録（新規作成）
+        Attendance::create([
+            'user_id' => $user->id,
+            'date' => $today,
+            'clock_in' => Carbon::now(),
+            'approval_status' => 'pending',
+        ]);
+
         return redirect()->route('attendance.register');
     }
+
+
 
     public function breakIn(Request $request)
     {
@@ -180,12 +214,13 @@ class AttendanceController extends Controller
             }
         }
 
-        return view('attendance.show', compact('attendance', 'isPending'));
+        $breakCount = $attendance->breaks->count();
+
+        return view('attendance.show', compact('attendance', 'isPending', 'breakCount'));
     }
 
-
-
-    public function updateRequest(Request $request, $id)
+    // 修正申請を処理
+    public function updateRequest(AttendanceUpdateRequest $request, $id)
     {
         \Log::info('修正申請処理開始', [
             'attendance_id' => $id,
