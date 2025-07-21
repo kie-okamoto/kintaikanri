@@ -37,10 +37,18 @@
           <th>出勤・退勤</th>
           <td>
             <div class="show__time-row">
-              <input type="time" name="clock_in" value="{{ optional($attendance->clock_in)->format('H:i') }}" class="show__time-input no-clock">
+              <input type="time" name="clock_in" value="{{ old('clock_in', optional($attendance->clock_in)->format('H:i')) }}" class="show__time-input no-clock">
               <span class="show__tilde">〜</span>
-              <input type="time" name="clock_out" value="{{ optional($attendance->clock_out)->format('H:i') }}" class="show__time-input no-clock">
+              <input type="time" name="clock_out" value="{{ old('clock_out', optional($attendance->clock_out)->format('H:i')) }}" class="show__time-input no-clock">
             </div>
+
+            {{-- 出退勤共通エラーメッセージ表示 --}}
+            @if ($errors->has('clock_in'))
+            @foreach ($errors->get('clock_in') as $message)
+            <div class="error">{{ $message }}</div>
+            @break {{-- 最初の1つだけ表示 --}}
+            @endforeach
+            @endif
           </td>
         </tr>
 
@@ -56,9 +64,7 @@
                 name="breaks[{{ $i }}][start]"
                 value="{{ old("breaks.$i.start", optional($attendance->breaks[$i]->start ?? null)->format('H:i')) }}"
                 class="show__time-input no-clock">
-
               <span class="show__tilde">〜</span>
-
               <input
                 type="time"
                 name="breaks[{{ $i }}][end]"
@@ -71,14 +77,9 @@
             <div class="error">{{ $message }}</div>
             @enderror
 
-            {{-- エラー表示：終了時刻 --}}
-            @error("breaks.$i.end")
-            <div class="error">{{ $message }}</div>
-            @enderror
           </td>
           </tr>
           @endfor
-
 
           <tr>
             <th>備考</th>

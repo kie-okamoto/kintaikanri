@@ -12,6 +12,9 @@
   {{-- 共通CSS（必要に応じて） --}}
   <link rel="stylesheet" href="{{ asset('css/admin/header.css') }}">
 
+  {{-- ✅ Font Awesome（アイコン用） --}}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
   {{-- ページ固有のCSS --}}
   @yield('styles')
 </head>

@@ -17,29 +17,44 @@ body {
 }
 
 /* ==== 月ナビゲーション（白ブロック外） ==== */
-.staff-detail__month-nav {
+.staff-detail__date-nav {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  margin: 20px auto 20px;
-  font-size: 20px;
   gap: 60px;
-  font-weight: bold;
-  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px 32px;
   background-color: #fff;
-  padding: 16px 32px;
   border-radius: 10px;
+  max-width: 1200px;
+  font-weight: bold;
+  font-size: 18px;
 }
 
-.staff-detail__month-link {
-  text-decoration: none;
+.nav-button {
+  background-color: #fff;
+  color: #666;
+  border: none;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.nav-button:hover {
   color: black;
-  font-weight: bold;
 }
 
-.staff-detail__month {
-  font-weight: bold;
+.current-date {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 20px;
+  color: #000;
+}
+
+.fa-calendar {
+  font-size: 22px;
+  color: #333;
 }
 
 /* ==== CSV出力ボタン（白ブロック外右下） ==== */

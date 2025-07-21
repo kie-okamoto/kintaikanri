@@ -37,8 +37,8 @@ class AttendanceUpdateRequest extends FormRequest
 
             // 出退勤の前後関係チェック
             if ($clockIn && $clockOut && $clockIn > $clockOut) {
+                // どちらか一方だけにエラーを出す（ここでは出勤に）
                 $validator->errors()->add('clock_in', '出勤時間もしくは退勤時間が不適切な値です');
-                $validator->errors()->add('clock_out', '出勤時間もしくは退勤時間が不適切な値です');
             }
 
             $breaks = $this->input('breaks', []);
@@ -47,13 +47,18 @@ class AttendanceUpdateRequest extends FormRequest
                 $start = $break['start'] ?? null;
                 $end = $break['end'] ?? null;
 
-                // 勤務時間外チェック
-                if ($clockIn && $start && $start < $clockIn) {
+                // 勤務時間外チェック：どちらかが勤務時間外なら、まとめて1つだけエラーを追加
+                if (
+                    ($clockIn && $start && $start < $clockIn) ||
+                    ($clockOut && $end && $end > $clockOut)
+                ) {
+                    // start側にだけエラーを追加
                     $validator->errors()->add("breaks.$index.start", '休憩時間が勤務時間外です');
                 }
 
-                if ($clockOut && $end && $end > $clockOut) {
-                    $validator->errors()->add("breaks.$index.end", '休憩時間が勤務時間外です');
+                // 休憩開始 > 終了のチェック（時間の逆転）
+                if ($start && $end && $start > $end) {
+                    $validator->errors()->add("breaks.$index.start", '休憩開始と終了の時刻が逆転しています');
                 }
             }
 

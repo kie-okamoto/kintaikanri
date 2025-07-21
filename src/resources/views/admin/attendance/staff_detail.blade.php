@@ -12,14 +12,29 @@
 {{-- タイトル --}}
 <h2 class="staff-detail__title--outside">{{ $user->name }}さんの勤怠</h2>
 
-{{-- 月ナビゲーション --}}
-<div class="staff-detail__month-nav">
-  <a href="{{ route('admin.attendance.staff_detail', ['id' => $user->id, 'month' => $previousMonth]) }}" class="staff-detail__month-link">← 前月</a>
-  <span class="staff-detail__month">{{ \Carbon\Carbon::parse($currentMonth)->format('Y年n月') }}</span>
-  <a href="{{ route('admin.attendance.staff_detail', ['id' => $user->id, 'month' => $nextMonth]) }}" class="staff-detail__month-link">翌月 →</a>
+{{-- 月ナビゲーション（中央カレンダーアイコン + 前月/翌月） --}}
+<div class="staff-detail__date-nav">
+  {{-- 前月ボタン --}}
+  <form method="GET" action="{{ route('admin.attendance.staff_detail', ['id' => $user->id]) }}">
+    <input type="hidden" name="month" value="{{ \Carbon\Carbon::parse($currentMonth)->subMonth()->format('Y-m') }}">
+    <button type="submit" class="nav-button">← 前月</button>
+  </form>
+
+  {{-- 現在月 + カレンダーアイコン --}}
+  <div class="current-date">
+    <i class="fa fa-calendar staff-detail__calendar-icon"></i>
+    {{ \Carbon\Carbon::parse($currentMonth)->format('Y/m') }}
+  </div>
+
+  {{-- 翌月ボタン --}}
+  <form method="GET" action="{{ route('admin.attendance.staff_detail', ['id' => $user->id]) }}">
+    <input type="hidden" name="month" value="{{ \Carbon\Carbon::parse($currentMonth)->addMonth()->format('Y-m') }}">
+    <button type="submit" class="nav-button">翌月 →</button>
+  </form>
 </div>
 
-{{-- 勤怠テーブル（白ブロック内） --}}
+
+{{-- 勤怠テーブル --}}
 <div class="staff-detail__wrapper">
   <div class="staff-detail__table-wrapper">
     <table class="staff-detail__table">

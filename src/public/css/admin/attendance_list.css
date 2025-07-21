@@ -27,34 +27,36 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 60px;
+  margin: 20px auto;
+  padding: 20px 32px;
   background-color: #fff;
   border-radius: 10px;
-  padding: 16px 32px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  max-width: 1200px;
+  font-weight: bold;
+  font-size: 18px;
 }
 
 /* ==== 日付テキストとアイコン ==== */
 .current-date {
-  font-size: 16px;
-  font-weight: bold;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  font-size: 20px;
+  color: #000;
 }
 
 /* ==== 前日・翌日ボタン ==== */
 .nav-button {
-  font-size: 14px;
-  color: #555;
-  text-decoration: none;
-  background: none;
+  background-color: #fff;
+  color: #666;
   border: none;
+  font-weight: bold;
+  font-size: 16px;
   cursor: pointer;
 }
 
 .nav-button:hover {
-  text-decoration: underline;
   color: #000;
 }
 

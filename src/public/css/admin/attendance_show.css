@@ -179,3 +179,11 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   cursor: not-allowed;
   opacity: 1;
 }
+
+/* ▼ バリデーションエラー文字を赤に変更 ▼ */
+.invalid-feedback,
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: 6px;
+}

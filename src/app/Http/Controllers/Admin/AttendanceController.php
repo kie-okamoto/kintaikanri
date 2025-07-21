@@ -8,6 +8,7 @@ use App\Models\Attendance;
 use App\Models\User;
 use Carbon\Carbon;
 use App\Models\StampCorrectionRequest;
+use App\Http\Requests\AttendanceUpdateRequest;
 
 class AttendanceController extends Controller
 {
@@ -33,6 +34,8 @@ class AttendanceController extends Controller
 
         return view('admin.attendance.index', compact('attendances', 'date'));
     }
+
+
 
     public function show($id)
     {
@@ -79,7 +82,7 @@ class AttendanceController extends Controller
 
 
 
-    public function update(Request $request, $id)
+    public function update(AttendanceUpdateRequest $request, $id)
     {
         $attendance = Attendance::with(['breaks', 'correctionRequest'])->findOrFail($id);
 
@@ -90,14 +93,7 @@ class AttendanceController extends Controller
                 ->with('error', 'この勤怠は既に承認済みのため、再修正はできません。');
         }
 
-        $request->validate([
-            'clock_in' => 'nullable|date_format:H:i',
-            'clock_out' => 'nullable|date_format:H:i',
-            'note' => 'nullable|string|max:255',
-            'breaks.*.start' => 'nullable|date_format:H:i',
-            'breaks.*.end' => 'nullable|date_format:H:i',
-        ]);
-
+        // 入力値の反映
         $attendance->clock_in = $request->input('clock_in');
         $attendance->clock_out = $request->input('clock_out');
         $attendance->note = $request->input('note');
@@ -132,7 +128,6 @@ class AttendanceController extends Controller
                 ]);
             }
         }
-
 
         return redirect()
             ->route('admin.attendance.show', $attendance->id)
@@ -209,37 +204,56 @@ class AttendanceController extends Controller
     public function exportCsv($id, $month = null)
     {
         $user = User::findOrFail($id);
-        $month = $month ?? now()->format('Y-m');
-        $parsedMonth = Carbon::parse($month);
 
         $attendances = $user->attendances()
-            ->whereYear('date', $parsedMonth->year)
-            ->whereMonth('date', $parsedMonth->month)
             ->with('breaks')
+            ->when($month, function ($query, $month) {
+                return $query->where('date', 'like', $month . '%');
+            })
             ->orderBy('date')
             ->get();
 
         $csvHeader = ['日付', '出勤時間', '退勤時間', '休憩時間合計', '勤務時間合計'];
-        $filename = $user->name . '_attendance_' . $parsedMonth->format('Y-m') . '.csv';
+        $filename = $user->name . '_attendance_' . ($month ?? now()->format('Y-m')) . '.csv';
 
         $callback = function () use ($attendances, $csvHeader) {
             $stream = fopen('php://output', 'w');
+
+            // 🔶 文字化け防止：UTF-8 BOM を付与
             fwrite($stream, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
             fputcsv($stream, $csvHeader);
 
             foreach ($attendances as $attendance) {
-                $clockIn = optional($attendance->clock_in)->format('H:i');
-                $clockOut = optional($attendance->clock_out)->format('H:i');
+                $clockIn = $attendance->clock_in ? \Carbon\Carbon::parse($attendance->clock_in) : null;
+                $clockOut = $attendance->clock_out ? \Carbon\Carbon::parse($attendance->clock_out) : null;
 
-                $break = $attendance->break_duration ? substr($attendance->break_duration, 0, 5) : '';
-                $total = $attendance->total_duration ? substr($attendance->total_duration, 0, 5) : '';
+                // 休憩時間（秒）
+                $breakSeconds = $attendance->breaks->sum(function ($break) {
+                    if ($break->start && $break->end) {
+                        return \Carbon\Carbon::parse($break->end)->diffInSeconds(\Carbon\Carbon::parse($break->start));
+                    }
+                    return 0;
+                });
+
+                // 勤務時間（秒）＝ 退勤 - 出勤 - 休憩
+                $workSeconds = 0;
+                if ($clockIn && $clockOut) {
+                    $workSeconds = $clockOut->diffInSeconds($clockIn) - $breakSeconds;
+                    if ($workSeconds < 0) {
+                        $workSeconds = 0;
+                    }
+                }
+
+                $breakDuration = gmdate('H:i', $breakSeconds);
+                $workDuration = gmdate('H:i', $workSeconds);
 
                 fputcsv($stream, [
-                    Carbon::parse($attendance->date)->format('Y-m-d'),
-                    $clockIn,
-                    $clockOut,
-                    $break,
-                    $total,
+                    \Carbon\Carbon::parse($attendance->date)->format('Y-m-d'),
+                    $clockIn ? $clockIn->format('H:i') : '',
+                    $clockOut ? $clockOut->format('H:i') : '',
+                    $breakDuration,
+                    $workDuration,
                 ]);
             }
 
@@ -247,8 +261,8 @@ class AttendanceController extends Controller
         };
 
         return response()->stream($callback, 200, [
-            "Content-Type" => "text/csv; charset=UTF-8",
-            "Content-Disposition" => "attachment; filename={$filename}",
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 }
