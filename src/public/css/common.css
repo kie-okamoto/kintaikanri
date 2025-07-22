@@ -1,4 +1,4 @@
-/* ===== RESET / BASE ===== */
+/* ✅ 共通ベースは維持。ただしロゴ指定は削除 */
 body {
   margin: 0;
   padding: 0;
@@ -12,49 +12,6 @@ body {
   box-sizing: border-box;
 }
 
-/* ===== 白背景にしたいページ（ログイン・登録・認証） ===== */
-body.auth-page {
-  background-color: #ffffff;
-}
-
-/* ===== HEADER ===== */
-.header {
-  background-color: #000;
-  width: 100%;
-}
-
-.header__inner {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  height: 80px;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.header__logo {
-  width: 370px;
-  height: 36px;
-  display: block;
-  vertical-align: middle;
-}
-
-.header__left {
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-
-/* ===== PC幅固定（1400〜1540px）対応 ===== */
-@media screen and (min-width: 1400px) and (max-width: 1540px) {
-  .header__inner {
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-}
-
-/* ===== 汎用リンク・ボタン調整（必要であれば） ===== */
 a {
   color: #007bff;
   text-decoration: none;
@@ -68,3 +25,5 @@ button {
   font-family: inherit;
   cursor: pointer;
 }
+
+/* ✅ header__logoに関する記述は削除 */

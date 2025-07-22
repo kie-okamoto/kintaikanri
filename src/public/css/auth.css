@@ -1,4 +1,4 @@
-/* ==== RESET ==== */
+/* RESET */
 body {
   font-family: sans-serif;
   background-color: #fff;
@@ -6,7 +6,6 @@ body {
   padding: 0;
 }
 
-/* ==== CONTAINER ==== */
 .container {
   width: 100%;
   max-width: 680px;
@@ -16,14 +15,12 @@ body {
   text-align: center;
 }
 
-/* ==== FORM ==== */
 form {
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
 
-/* ==== FORM LABEL ==== */
 form label {
   text-align: left;
   font-size: 24px;
@@ -33,7 +30,6 @@ form label {
   margin-top: 20px;
 }
 
-/* ==== INPUT ==== */
 input[type="text"],
 input[type="email"],
 input[type="password"] {
@@ -45,7 +41,6 @@ input[type="password"] {
   box-sizing: border-box;
 }
 
-/* ==== BUTTON ==== */
 button {
   background-color: #000;
   color: #fff;
@@ -58,7 +53,6 @@ button {
   margin-top: 80px;
 }
 
-/* ==== メイン認証ボタン ==== */
 .verify-main-button {
   display: block;
   margin: 30px auto 0 auto;
@@ -86,7 +80,6 @@ button {
   margin-bottom: 30px;
 }
 
-/* ==== 認証メール再送リンク風ボタン ==== */
 .resend-link {
   background: none;
   border: none;
@@ -98,13 +91,13 @@ button {
   display: inline-block;
 }
 
-/* ==== 中央配置 ==== */
 .center-link {
   text-align: center;
+  margin-top: 20px;
 }
 
-/* ==== LINK ==== */
-a {
+.link-button,
+.center-link a {
   display: block;
   text-align: center;
   font-size: 20px;
@@ -122,11 +115,6 @@ a {
   font-size: 12px;
   padding: 0;
   margin-top: 10px;
-}
-
-.center-link {
-  text-align: center;
-  margin-top: 20px;
 }
 
 .auth-wrapper {
@@ -148,7 +136,12 @@ a {
   text-align: left;
 }
 
-/* ==== PC 固定幅（1400〜1540px）対応 ==== */
+.header__left a {
+  all: unset;
+  display: flex;
+  align-items: center;
+}
+
 @media screen and (min-width: 1400px) and (max-width: 1540px) {
   .container {
     margin-top: 80px;

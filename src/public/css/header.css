@@ -1,21 +1,29 @@
 .header {
   background-color: #000;
   width: 100%;
+  height: 80px;
 }
 
 .header__inner {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  height: 80px;
-  max-width: 100%;
-  margin: 0 auto;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 40px;
+  box-sizing: border-box;
 }
 
-/* ロゴサイズは common.css の設定を優先 */
+.header__left,
+.header__left a {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
 .header__logo {
-  width: 370px;
   height: 36px;
+  display: block;
+  object-fit: contain;
 }
 
 .header__logout-button {
@@ -23,15 +31,12 @@
   align-items: center;
 }
 
-/* ナビゲーション（右側） */
 .header__nav {
   display: flex;
   gap: 50px;
   align-items: center;
 }
 
-/* 各リンクとボタン */
-/* 各リンクとボタン */
 .header__nav a,
 .header__logout-button {
   font-size: 24px;
@@ -43,4 +48,11 @@
   border: none;
   text-decoration: none;
   cursor: pointer;
+}
+
+@media screen and (min-width: 1400px) and (max-width: 1540px) {
+  .header__inner {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
 }
