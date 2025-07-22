@@ -188,36 +188,66 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $attendance = Attendance::with(['user', 'breaks', 'correctionRequest'])->findOrFail($id);
+        $user = auth()->user();
+        $today = Carbon::today();
 
-        $isPending = optional($attendance->correctionRequest)->status === 'pending';
+        // URLまたはクエリ文字列から対象日（例：/attendance/new?date=2025-07-01）
+        $targetDate = $request->input('date') ?? $today->toDateString();
 
-        // 修正申請中かつデータが存在する場合、仮表示データで上書き
-        if ($isPending && $attendance->correctionRequest->data) {
-            $data = json_decode($attendance->correctionRequest->data, true);
+        if ($id === 'new') {
+            // 仮データ（未登録の場合）に対象日を反映
+            $attendance = new Attendance([
+                'user_id' => $user->id,
+                'date' => $targetDate,
+                'clock_in' => null,
+                'clock_out' => null,
+                'note' => null,
+            ]);
+            $attendance->setRelation('breaks', collect());
+            $isPending = false;
+            $breakCount = 0;
+        } else {
+            // 登録済みのデータ取得
+            $attendance = Attendance::with(['user', 'breaks', 'correctionRequest'])
+                ->where('id', $id)
+                ->where('user_id', $user->id)
+                ->firstOrFail();
 
-            // 出勤・退勤・備考
-            $attendance->clock_in = !empty($data['clock_in']) ? Carbon::parse($data['clock_in']) : $attendance->clock_in;
-            $attendance->clock_out = !empty($data['clock_out']) ? Carbon::parse($data['clock_out']) : $attendance->clock_out;
-            $attendance->note = array_key_exists('note', $data) ? $data['note'] : $attendance->note;
-
-            // 休憩：配列 → Collection<(object)>
-            if (!empty($data['breaks']) && is_array($data['breaks'])) {
-                $attendance->setRelation('breaks', collect($data['breaks'])->map(function ($break) {
-                    return (object)[
-                        'start' => !empty($break['start']) ? Carbon::parse($break['start']) : null,
-                        'end'   => !empty($break['end']) ? Carbon::parse($break['end']) : null,
-                    ];
-                }));
+            // 未来日の勤怠は表示不可
+            if (Carbon::parse($attendance->date)->gt($today)) {
+                abort(403, '未来日の勤怠は表示できません');
             }
+
+            $isPending = optional($attendance->correctionRequest)->status === 'pending';
+
+            if ($isPending && $attendance->correctionRequest->data) {
+                $data = json_decode($attendance->correctionRequest->data, true);
+
+                // 出退勤・備考
+                $attendance->clock_in = !empty($data['clock_in']) ? Carbon::parse($data['clock_in']) : $attendance->clock_in;
+                $attendance->clock_out = !empty($data['clock_out']) ? Carbon::parse($data['clock_out']) : $attendance->clock_out;
+                $attendance->note = array_key_exists('note', $data) ? $data['note'] : $attendance->note;
+
+                // 休憩
+                if (!empty($data['breaks']) && is_array($data['breaks'])) {
+                    $attendance->setRelation('breaks', collect($data['breaks'])->map(function ($break) {
+                        return (object)[
+                            'start' => !empty($break['start']) ? Carbon::parse($break['start']) : null,
+                            'end'   => !empty($break['end']) ? Carbon::parse($break['end']) : null,
+                        ];
+                    }));
+                }
+            }
+
+            $breakCount = $attendance->breaks->count();
+            $targetDate = $attendance->date; // 確実に登録データの日付を優先
         }
 
-        $breakCount = $attendance->breaks->count();
-
-        return view('attendance.show', compact('attendance', 'isPending', 'breakCount'));
+        return view('attendance.show', compact('attendance', 'isPending', 'breakCount', 'targetDate'));
     }
+
 
     // 修正申請を処理
     public function updateRequest(AttendanceUpdateRequest $request, $id)
@@ -230,24 +260,36 @@ class AttendanceController extends Controller
             'breaks' => $request->input('breaks'),
         ]);
 
-        $attendance = Attendance::with('breaks')->findOrFail($id);
+        $user = auth()->user();
+        $today = Carbon::today();
 
-        // すでに申請中なら拒否
+        // ✅ 「new」の場合は勤怠レコードを作成（または取得）
+        if ($id === 'new') {
+            $attendance = Attendance::firstOrCreate(
+                ['user_id' => $user->id, 'date' => $today->toDateString()],
+                ['approval_status' => 'pending']
+            );
+        } else {
+            $attendance = Attendance::with('breaks')->findOrFail($id);
+        }
+
+        // ✅ すでに申請中なら拒否（new含む）
         if ($attendance->correctionRequest && $attendance->correctionRequest->status === 'pending') {
-            return redirect()->route('attendance.show', $id)
+            return redirect()->route('attendance.show', $attendance->id)
                 ->with('error', 'すでに修正申請が提出されています。承認をお待ちください。');
         }
 
-        // breaks の整形（name="breaks[0][start]"形式を正しく配列化）
+        // ✅ 休憩の整形（breaks[0][start] → 配列に変換）
         $rawBreaks = $request->input('breaks', []);
         $breaks = [];
-        foreach ($rawBreaks as $index => $break) {
+        foreach ($rawBreaks as $break) {
             $breaks[] = [
                 'start' => $break['start'] ?? null,
                 'end'   => $break['end'] ?? null,
             ];
         }
 
+        // ✅ correction_request に保存するデータ
         $correctionData = [
             'clock_in'  => $request->input('clock_in'),
             'clock_out' => $request->input('clock_out'),
@@ -255,6 +297,7 @@ class AttendanceController extends Controller
             'breaks'    => $breaks,
         ];
 
+        // ✅ 修正申請を作成
         AttendanceCorrectionRequest::create([
             'attendance_id' => $attendance->id,
             'reason'        => $request->input('note'),
@@ -265,7 +308,7 @@ class AttendanceController extends Controller
 
         \Log::info('修正申請内容を保存', ['correction_data' => $correctionData]);
 
-        return redirect()->route('attendance.show', $id)
+        return redirect()->route('attendance.show', $attendance->id)
             ->with('success', '修正申請を送信しました。承認をお待ちください。');
     }
 }

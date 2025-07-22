@@ -96,15 +96,22 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   appearance: none;
 }
 
+.show__note-wrapper {
+  display: flex;
+  width: 100%;
+}
+
 .show__note-input {
-  width: 295px;
+  width: 295px !important;
   height: 60px;
   padding: 6px 8px;
   font-size: 16px;
   color: #333;
-  border: 1px solid #ccc;
+  border: 1px solid #ccc !important;
   border-radius: 4px;
+  box-sizing: border-box;
 }
+
 
 /* 修正ボタン外側配置 */
 .show__button-outside {

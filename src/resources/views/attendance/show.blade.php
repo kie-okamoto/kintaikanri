@@ -12,22 +12,27 @@
 <div class="show-wrapper">
   <div class="show">
     {{-- 修正申請フォーム --}}
-    <form id="form" method="POST" action="{{ route('attendance.updateRequest', $attendance->id) }}">
+    <form id="form" method="POST" action="{{ route('attendance.updateRequest', $attendance->id ?? 'new') }}">
       @csrf
       @method('POST')
 
       <table class="show__table">
+        {{-- 名前 --}}
         <tr>
           <th>名前</th>
           <td>{{ Auth::user()->name }}</td>
         </tr>
 
+        {{-- 日付 --}}
         <tr>
           <th>日付</th>
           <td>
+            @php
+            $parsedDate = \Carbon\Carbon::parse($targetDate);
+            @endphp
             <div class="show__date-row">
-              <div class="show__date-year">{{ \Carbon\Carbon::parse($attendance->date)->year }}年</div>
-              <div class="show__date-monthday">{{ \Carbon\Carbon::parse($attendance->date)->format('n月j日') }}</div>
+              <div class="show__date-year">{{ $parsedDate->year }}年</div>
+              <div class="show__date-monthday">{{ $parsedDate->format('n月j日') }}</div>
             </div>
           </td>
         </tr>
@@ -52,16 +57,11 @@
               @endif
             </div>
 
-            {{-- 出退勤共通エラー表示：clock_inだけにまとめる --}}
             @if ($errors->has('clock_in'))
-            @foreach ($errors->get('clock_in') as $message)
-            <div class="show__error">{{ $message }}</div>
-            @break {{-- 1回だけ表示したい場合は @break --}}
-            @endforeach
+            <div class="show__error">{{ $errors->first('clock_in') }}</div>
             @endif
           </td>
         </tr>
-
 
         {{-- 休憩 --}}
         @for ($i = 0; $i < $breakCount + ($isPending ? 0 : 1); $i++)
@@ -88,12 +88,9 @@
                 @endif
               </div>
 
-              {{-- エラーメッセージ表示 --}}
               @foreach (['start', 'end'] as $key)
               @if ($errors->has("breaks.{$i}.{$key}"))
-              @foreach ($errors->get("breaks.{$i}.{$key}") as $message)
-              <div class="show__error">{{ $message }}</div>
-              @endforeach
+              <div class="show__error">{{ $errors->first("breaks.{$i}.{$key}") }}</div>
               @endif
               @endforeach
             </td>
@@ -104,7 +101,7 @@
           <tr>
             <th>備考</th>
             <td>
-              <div class="show__time-row">
+              <div class="show__note-wrapper">
                 <input type="text" name="note" value="{{ old('note', $attendance->note ?? '') }}"
                   class="show__note-input" @if($isPending) disabled @endif>
                 @if($isPending)
@@ -112,14 +109,10 @@
                 @endif
               </div>
 
-              {{-- エラーメッセージ表示 --}}
               @foreach ($errors->get('note') as $message)
               <div class="show__error">{{ $message }}</div>
               @endforeach
             </td>
-          </tr>
-
-          </td>
           </tr>
       </table>
     </form>

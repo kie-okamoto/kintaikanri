@@ -71,7 +71,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // 勤怠一覧・詳細（URLに ?tab=user）
     Route::get('/attendance/list', [AttendanceController::class, 'list'])->name('attendance.list');
-    Route::get('/attendance/{id}', [AttendanceController::class, 'show'])->name('attendance.show');
+    Route::get('/attendance/{id}', [AttendanceController::class, 'show'])
+        ->name('attendance.show')
+        ->where('id', '.*');
 
     // 修正申請の登録
     Route::post('/attendance/{id}/update-request', [AttendanceController::class, 'updateRequest'])->name('attendance.updateRequest');
