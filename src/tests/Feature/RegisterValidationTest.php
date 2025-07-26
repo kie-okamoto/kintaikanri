@@ -84,7 +84,7 @@ class RegisterValidationTest extends TestCase
             'password_confirmation' => 'password123',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/email/verify');
         $this->assertDatabaseHas('users', [
             'email' => 'user@example.com',
         ]);

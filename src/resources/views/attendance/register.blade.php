@@ -9,26 +9,21 @@
 
 @section('content')
 <div class="attendance">
-  <p class="attendance__status">
-    @if ($status === 'off') 勤務外
-    @elseif ($status === 'working') 出勤中
-    @elseif ($status === 'break') 休憩中
-    @elseif ($status === 'done') 退勤済
-    @endif
-  </p>
+  {{-- ステータス表示（テストで使えるようdata-testid追加） --}}
+  <p class="attendance__status" data-testid="status-text">{{ $status }}</p>
 
-  {{-- ここは整形済みの文字列なのでそのまま表示でOK --}}
+  {{-- 日付と現在時刻 --}}
   <p class="attendance__date">{{ $date }}</p>
-
   <p class="attendance__time">{{ $time }}</p>
 
-  @if ($status === 'off')
+  {{-- 状態に応じてボタン表示 --}}
+  @if ($status === '勤務外')
   <form action="{{ route('attendance.start') }}" method="POST">
     @csrf
     <button type="submit" class="attendance__btn">出勤</button>
   </form>
 
-  @elseif ($status === 'working')
+  @elseif ($status === '出勤中')
   <div class="attendance__btn-group">
     <form action="{{ route('attendance.clockOut') }}" method="POST">
       @csrf
@@ -40,13 +35,13 @@
     </form>
   </div>
 
-  @elseif ($status === 'break')
+  @elseif ($status === '休憩中')
   <form action="{{ route('attendance.breakEnd') }}" method="POST">
     @csrf
     <button type="submit" class="attendance__btn attendance__btn--white">休憩戻</button>
   </form>
 
-  @elseif ($status === 'done')
+  @elseif ($status === '退勤済')
   <p class="attendance__thanks">お疲れ様でした。</p>
   @endif
 </div>

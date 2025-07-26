@@ -27,7 +27,7 @@ class Attendance extends Model
         'clock_in' => 'datetime',
         'clock_out' => 'datetime',
         'date' => 'date',
-        'is_fixed' => 'boolean', // ← ✅ 追加（true/false扱いに）
+        'is_fixed' => 'boolean',
     ];
 
     // ユーザーとのリレーション

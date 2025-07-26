@@ -15,6 +15,8 @@
     <form id="form" method="POST" action="{{ route('attendance.updateRequest', $attendance->id ?? 'new') }}">
       @csrf
       @method('POST')
+      <input type="hidden" name="date" value="{{ $targetDate }}">
+
 
       <table class="show__table">
         {{-- 名前 --}}

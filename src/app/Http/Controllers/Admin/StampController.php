@@ -35,11 +35,9 @@ class StampController extends Controller
     }
 
     // 承認処理（モデルの approve() を呼び出すだけ）
-    public function approve($id)
+    public function approve(AttendanceCorrectionRequest $attendance_correct_request)
     {
-        $request = AttendanceCorrectionRequest::findOrFail($id);
-
-        $request->approve(); // モデルに定義した承認処理を使用
+        $attendance_correct_request->approve();
 
         return response()->json(['message' => '承認しました']);
     }

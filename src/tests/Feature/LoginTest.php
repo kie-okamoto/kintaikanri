@@ -2,21 +2,15 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
 {
-    /**
-     * A basic feature test example.
-     *
-     * @return void
-     */
-    public function test_example()
+    /** @test */
+    public function test_login_page_is_accessible()
     {
-        $response = $this->get('/');
-
+        $response = $this->get('/login');
         $response->assertStatus(200);
+        $response->assertSee('ログイン'); // Blade内に表示されている文字列に合わせて調整
     }
 }

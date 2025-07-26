@@ -35,38 +35,77 @@ class AttendanceController extends Controller
         return view('admin.attendance.index', compact('attendances', 'date'));
     }
 
-
-
-    public function show($id)
+    public function show($id, Request $request)
     {
-        $attendance = Attendance::with(['user', 'breaks'])->findOrFail($id);
+        if ($id === 'new') {
+            $date = $request->query('date');
+            $userId = $request->query('user_id');
 
-        // 勤怠が「承認済み」かどうか判定（ボタン表示制御用）
+            if (!$date || !$userId) {
+                abort(404);
+            }
+
+            $user = User::findOrFail($userId);
+
+            $attendance = new Attendance();
+            $attendance->date = $date;
+            $attendance->clock_in = null;
+            $attendance->clock_out = null;
+            $attendance->note = null;
+            $attendance->user_id = $user->id;
+            $attendance->user = $user;
+            $attendance->breaks = collect();
+
+            $isApproved = false;
+
+            $correction = StampCorrectionRequest::where('user_id', $user->id)
+                ->where('target_date', $date)
+                ->first();
+
+            if ($correction && $correction->status === 'pending' && $correction->data) {
+                $data = json_decode($correction->data, true);
+
+                if (!empty($data['clock_in'])) {
+                    $attendance->clock_in = \Carbon\Carbon::parse($data['clock_in']);
+                }
+                if (!empty($data['clock_out'])) {
+                    $attendance->clock_out = \Carbon\Carbon::parse($data['clock_out']);
+                }
+                if (array_key_exists('note', $data)) {
+                    $attendance->note = $data['note'];
+                }
+                if (!empty($data['breaks']) && is_array($data['breaks'])) {
+                    $attendance->setRelation('breaks', collect($data['breaks'])->map(function ($break) {
+                        return (object)[
+                            'start' => !empty($break['start']) ? \Carbon\Carbon::parse($break['start']) : null,
+                            'end'   => !empty($break['end']) ? \Carbon\Carbon::parse($break['end']) : null,
+                        ];
+                    }));
+                }
+            }
+
+            return view('admin.attendance.show', compact('attendance', 'isApproved', 'correction', 'user'));
+        }
+
+        $attendance = Attendance::with(['user', 'breaks'])->findOrFail($id);
         $isApproved = $attendance->approval_status === 'approved';
 
-        // 該当ユーザーの修正申請データを取得
         $correction = StampCorrectionRequest::where('user_id', $attendance->user_id)
             ->where('target_date', $attendance->date)
             ->first();
 
-        // 修正申請中かつデータが存在する場合、仮反映する
         if ($correction && $correction->status === 'pending' && $correction->data) {
             $data = json_decode($correction->data, true);
 
-            // 出退勤
             if (!empty($data['clock_in'])) {
                 $attendance->clock_in = \Carbon\Carbon::parse($data['clock_in']);
             }
             if (!empty($data['clock_out'])) {
                 $attendance->clock_out = \Carbon\Carbon::parse($data['clock_out']);
             }
-
-            // 備考
             if (array_key_exists('note', $data)) {
                 $attendance->note = $data['note'];
             }
-
-            // 休憩（配列→コレクションにしてbreaksに仮反映）
             if (!empty($data['breaks']) && is_array($data['breaks'])) {
                 $attendance->setRelation('breaks', collect($data['breaks'])->map(function ($break) {
                     return (object)[
@@ -77,73 +116,78 @@ class AttendanceController extends Controller
             }
         }
 
-        return view('admin.attendance.show', compact('attendance', 'isApproved', 'correction'));
+        return view('admin.attendance.show', [
+            'attendance' => $attendance,
+            'isApproved' => $isApproved,
+            'correction' => $correction,
+            'user' => $attendance->user,
+        ]);
     }
-
-
 
     public function update(AttendanceUpdateRequest $request, $id)
     {
-        $attendance = Attendance::with(['breaks', 'correctionRequest'])->findOrFail($id);
-
-        // 承認済は編集不可
-        if ($attendance->approval_status === 'approved') {
-            return redirect()
-                ->route('admin.attendance.show', $attendance->id)
-                ->with('error', 'この勤怠は既に承認済みのため、再修正はできません。');
+        if ($id === 'new') {
+            return redirect()->back()->with('error', '新規勤怠に対する直接の更新はできません。');
         }
 
-        // 入力値の反映
+        $attendance = Attendance::findOrFail($id);
+
+        if ($attendance->approval_status === 'approved') {
+            return redirect()->back()->with('error', '承認済みの勤怠は修正できません。');
+        }
+
         $attendance->clock_in = $request->input('clock_in');
         $attendance->clock_out = $request->input('clock_out');
         $attendance->note = $request->input('note');
-        $attendance->is_fixed = true;
-
-        // 休憩再登録
-        $attendance->breaks()->delete();
-        if ($request->has('breaks')) {
-            foreach ($request->input('breaks') as $break) {
-                if (!empty($break['start']) || !empty($break['end'])) {
-                    $attendance->breaks()->create([
-                        'start' => $break['start'] ?? null,
-                        'end' => $break['end'] ?? null,
-                    ]);
-                }
-            }
-        }
-
         $attendance->save();
 
-        // 修正申請が存在し、承認待ちなら申請内容も更新
-        if ($attendance->approval_status === 'pending') {
-            $correctionRequest = StampCorrectionRequest::where('user_id', $attendance->user_id)
-                ->where('target_date', $attendance->date)
-                ->first();
-
-            if ($correctionRequest) {
-                $correctionRequest->update([
-                    'clock_in' => $attendance->clock_in,
-                    'clock_out' => $attendance->clock_out,
-                    'note' => $attendance->note,
+        $attendance->breaks()->delete();
+        $breaks = $request->input('breaks', []);
+        foreach ($breaks as $break) {
+            if (!empty($break['start']) && !empty($break['end'])) {
+                $attendance->breaks()->create([
+                    'start' => $break['start'],
+                    'end' => $break['end'],
                 ]);
             }
         }
 
-        return redirect()
-            ->route('admin.attendance.show', $attendance->id)
-            ->with('status', 'updated');
+        return redirect()->route('admin.attendance.show', $attendance->id)
+            ->with('status', '勤怠情報を更新しました');
     }
 
-    public function staffList($id)
+    public function storeNew(AttendanceUpdateRequest $request)
     {
-        $user = User::findOrFail($id);
-        $attendances = Attendance::where('user_id', $id)
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $userId = $request->input('user_id');
+        $date = $request->input('date');
 
-        $date = Carbon::now()->isoFormat('YYYY年MM月DD日（ddd）', 'ja');
+        $existing = Attendance::where('user_id', $userId)->where('date', $date)->first();
+        if ($existing) {
+            return redirect()->back()->with('error', 'すでに勤怠データが存在します。');
+        }
 
-        return view('admin.attendance.staff_list', compact('user', 'attendances', 'date'));
+        $attendance = new Attendance();
+        $attendance->user_id = $userId;
+        $attendance->date = $date;
+        $attendance->clock_in = $request->input('clock_in');
+        $attendance->clock_out = $request->input('clock_out');
+        $attendance->note = $request->input('note');
+        $attendance->save();
+
+        $breaks = $request->input('breaks', []);
+        foreach ($breaks as $break) {
+            if (!empty($break['start']) && !empty($break['end'])) {
+                $attendance->breaks()->create([
+                    'start' => $break['start'],
+                    'end' => $break['end'],
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.attendance.show', [
+            'id' => $attendance->id,
+            'tab' => 'admin',
+        ])->with('status', '勤怠情報を新規登録しました');
     }
 
     public function staffDetail($id, Request $request)
@@ -218,17 +262,13 @@ class AttendanceController extends Controller
 
         $callback = function () use ($attendances, $csvHeader) {
             $stream = fopen('php://output', 'w');
-
-            // 🔶 文字化け防止：UTF-8 BOM を付与
             fwrite($stream, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
             fputcsv($stream, $csvHeader);
 
             foreach ($attendances as $attendance) {
                 $clockIn = $attendance->clock_in ? \Carbon\Carbon::parse($attendance->clock_in) : null;
                 $clockOut = $attendance->clock_out ? \Carbon\Carbon::parse($attendance->clock_out) : null;
 
-                // 休憩時間（秒）
                 $breakSeconds = $attendance->breaks->sum(function ($break) {
                     if ($break->start && $break->end) {
                         return \Carbon\Carbon::parse($break->end)->diffInSeconds(\Carbon\Carbon::parse($break->start));
@@ -236,7 +276,6 @@ class AttendanceController extends Controller
                     return 0;
                 });
 
-                // 勤務時間（秒）＝ 退勤 - 出勤 - 休憩
                 $workSeconds = 0;
                 if ($clockIn && $clockOut) {
                     $workSeconds = $clockOut->diffInSeconds($clockIn) - $breakSeconds;

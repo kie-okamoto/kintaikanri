@@ -13,14 +13,27 @@
 
   <div class="show">
     {{-- 修正フォーム --}}
-    <form id="form" method="POST" action="{{ route('admin.attendance.update', $attendance->id) }}">
+    @php
+    $action = $attendance->id
+    ? route('admin.attendance.update', $attendance->id)
+    : route('admin.attendance.storeNew');
+    @endphp
+
+    <form id="form" method="POST" action="{{ $action }}">
       @csrf
-      @method('POST')
+      @if ($attendance->id)
+      @method('PUT')
+      @endif
+      <input type="hidden" name="user_id" value="{{ $user->id }}">
+      <input type="hidden" name="date" value="{{ $attendance->date }}">
+
+
+
 
       <table class="show__table">
         <tr>
           <th>名前</th>
-          <td>{{ $attendance->user->name }}</td>
+          <td>{{ $user->name }}</td>
         </tr>
 
         <tr>
@@ -37,46 +50,33 @@
           <th>出勤・退勤</th>
           <td>
             <div class="show__time-row">
-              <input type="time" name="clock_in" value="{{ old('clock_in', optional($attendance->clock_in)->format('H:i')) }}" class="show__time-input no-clock">
+              <input type="time" name="clock_in" value="{{ old('clock_in', optional($attendance->clock_in)->format('H:i')) }}" class="show__time-input">
               <span class="show__tilde">〜</span>
-              <input type="time" name="clock_out" value="{{ old('clock_out', optional($attendance->clock_out)->format('H:i')) }}" class="show__time-input no-clock">
+              <input type="time" name="clock_out" value="{{ old('clock_out', optional($attendance->clock_out)->format('H:i')) }}" class="show__time-input">
             </div>
-
-            {{-- 出退勤共通エラーメッセージ表示 --}}
             @if ($errors->has('clock_in'))
             @foreach ($errors->get('clock_in') as $message)
             <div class="error">{{ $message }}</div>
-            @break {{-- 最初の1つだけ表示 --}}
+            @break
             @endforeach
             @endif
           </td>
         </tr>
 
-        {{-- 休憩表示（既存 + 空欄1行） --}}
+        {{-- 休憩時間 --}}
         @php $breakCount = $attendance->breaks->count(); @endphp
         @for ($i = 0; $i <= $breakCount; $i++)
           <tr>
           <th>{{ $i === 0 ? '休憩' : '休憩' . ($i + 1) }}</th>
           <td>
             <div class="show__time-row">
-              <input
-                type="time"
-                name="breaks[{{ $i }}][start]"
-                value="{{ old("breaks.$i.start", optional($attendance->breaks[$i]->start ?? null)->format('H:i')) }}"
-                class="show__time-input no-clock">
+              <input type="time" name="breaks[{{ $i }}][start]" value="{{ old("breaks.$i.start", optional($attendance->breaks[$i]->start ?? null)->format('H:i')) }}" class="show__time-input">
               <span class="show__tilde">〜</span>
-              <input
-                type="time"
-                name="breaks[{{ $i }}][end]"
-                value="{{ old("breaks.$i.end", optional($attendance->breaks[$i]->end ?? null)->format('H:i')) }}"
-                class="show__time-input no-clock">
+              <input type="time" name="breaks[{{ $i }}][end]" value="{{ old("breaks.$i.end", optional($attendance->breaks[$i]->end ?? null)->format('H:i')) }}" class="show__time-input">
             </div>
-
-            {{-- エラー表示：開始時刻 --}}
             @error("breaks.$i.start")
             <div class="error">{{ $message }}</div>
             @enderror
-
           </td>
           </tr>
           @endfor
@@ -87,8 +87,6 @@
               <div class="show__time-row">
                 <input type="text" name="note" value="{{ old('note', $attendance->note ?? '') }}" class="show__note-input">
               </div>
-
-              {{-- エラーメッセージ表示 --}}
               @error('note')
               <div class="error">{{ $message }}</div>
               @enderror
@@ -99,12 +97,11 @@
   </div>
 </div>
 
-{{-- ✅ 修正ボタン（常に表示。ただし承認済・修正済なら無効化） --}}
+{{-- ✅ 修正ボタン --}}
 <div class="show__submit-wrapper">
   @php
   $isDisabled = $isApproved || $attendance->is_fixed;
   @endphp
-
   <button
     type="button"
     class="show__submit"
@@ -124,19 +121,19 @@ $alreadyUpdated = session('status') === 'updated' || $attendance->is_fixed;
   document.addEventListener('DOMContentLoaded', () => {
     const button = document.getElementById('submitBtn');
     const form = document.getElementById('form');
-
     const isAlreadyUpdated = @json($alreadyUpdated);
 
     if (button && form && !isAlreadyUpdated) {
       button.addEventListener('click', function() {
         if (this.disabled) return;
-
         this.disabled = true;
         this.innerText = '修正済';
         this.style.backgroundColor = '#ccc';
         this.style.color = '#666';
         this.style.cursor = 'not-allowed';
 
+        // ✅ submit直後にボタンを完全に無効化（ダブルクリック防止）
+        this.setAttribute('disabled', 'disabled');
         setTimeout(() => {
           form.submit();
         }, 100);
@@ -144,4 +141,5 @@ $alreadyUpdated = session('status') === 'updated' || $attendance->is_fixed;
     }
   });
 </script>
+
 @endsection

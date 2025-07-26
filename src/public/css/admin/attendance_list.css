@@ -100,3 +100,16 @@ body {
 .admin-attendance__link:hover {
   text-decoration: underline;
 }
+
+.admin-attendance__link--disabled {
+  color: gray;
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+.staff-detail__link--disabled {
+  color: gray;
+  pointer-events: none;
+  text-decoration: none;
+  cursor: default;
+}

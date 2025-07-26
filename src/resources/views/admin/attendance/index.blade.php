@@ -55,13 +55,23 @@ Carbon::setLocale('ja');
       </thead>
       <tbody>
         @foreach($attendances as $attendance)
+        @php
+        $attendanceDate = \Carbon\Carbon::parse($attendance->date);
+        $isPastOrToday = $attendanceDate->lte(\Carbon\Carbon::today());
+        @endphp
         <tr>
           <td>{{ $attendance->user->name }}</td>
           <td>{{ $attendance->clock_in ? \Carbon\Carbon::parse($attendance->clock_in)->format('H:i') : '-' }}</td>
           <td>{{ $attendance->clock_out ? \Carbon\Carbon::parse($attendance->clock_out)->format('H:i') : '-' }}</td>
           <td>{{ $attendance->calculated_break_duration ?? '-' }}</td>
           <td>{{ $attendance->total_duration ? substr($attendance->total_duration, 0, 5) : '-' }}</td>
-          <td><a href="{{ route('admin.attendance.show', $attendance->id) }}" class="admin-attendance__link">詳細</a></td>
+          <td>
+            @if ($isPastOrToday)
+            <a href="{{ route('admin.attendance.show', $attendance->id) }}" class="admin-attendance__link">詳細</a>
+            @else
+            <span class="admin-attendance__link--disabled">詳細</span>
+            @endif
+          </td>
         </tr>
         @endforeach
       </tbody>

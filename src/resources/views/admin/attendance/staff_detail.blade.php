@@ -63,12 +63,25 @@
           <td>{{ $attendance->break_duration ? substr($attendance->break_duration, 0, 5) : '' }}</td>
           <td>{{ $attendance->total_duration ? substr($attendance->total_duration, 0, 5) : '' }}</td>
           <td>
-            @if ($attendance->clock_in && $attendance->clock_out)
+            @php
+            $attendanceDate = \Carbon\Carbon::parse($attendance->date);
+            $isPastOrToday = $attendanceDate->lte(\Carbon\Carbon::today());
+            @endphp
+
+            @if ($isPastOrToday)
+            @if (isset($attendance->id))
+            {{-- 勤怠が存在する場合 --}}
             <a href="{{ route('admin.attendance.show', ['id' => $attendance->id]) }}" class="staff-detail__link">詳細</a>
+            @else
+            {{-- 勤怠が存在しない日付（new + date + user_id） --}}
+            <a href="{{ route('admin.attendance.show', ['id' => 'new']) }}?date={{ $attendance->date }}&user_id={{ $user->id }}" class="staff-detail__link">詳細</a>
+            @endif
             @else
             <span class="staff-detail__link staff-detail__link--disabled">詳細</span>
             @endif
+
           </td>
+
         </tr>
         @endforeach
       </tbody>
