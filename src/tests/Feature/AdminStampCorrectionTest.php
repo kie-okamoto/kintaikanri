@@ -25,7 +25,9 @@ class AdminStampCorrectionTest extends TestCase
             'note' => '詳細内容1',
         ]);
 
-        $response = $this->actingAs($admin)->get('/admin/stamp_correction_request/list?tab=admin');
+        // ✅ 管理者ガードで actingAs
+        $response = $this->actingAs($admin, 'admin')
+            ->get('/admin/stamp_correction_request/list?tab=admin');
 
         $response->assertStatus(200);
         $response->assertSee('テスト理由1');
@@ -45,7 +47,8 @@ class AdminStampCorrectionTest extends TestCase
             'note' => '詳細内容2',
         ]);
 
-        $response = $this->actingAs($admin)->get('/admin/stamp_correction_request/list?tab=admin');
+        $response = $this->actingAs($admin, 'admin')
+            ->get('/admin/stamp_correction_request/list?tab=admin');
 
         $response->assertStatus(200);
         $response->assertSee('テスト理由2');
@@ -66,7 +69,8 @@ class AdminStampCorrectionTest extends TestCase
             'target_date' => Carbon::today(),
         ]);
 
-        $response = $this->actingAs($admin)->get('/admin/stamp_correction_request/approve/' . $request->id . '?tab=admin');
+        $response = $this->actingAs($admin, 'admin')
+            ->get('/admin/stamp_correction_request/approve/' . $request->id . '?tab=admin');
 
         $response->assertStatus(200);
         $response->assertSee('詳細表示テスト理由');
@@ -87,9 +91,10 @@ class AdminStampCorrectionTest extends TestCase
             'note' => '内容確認済み、承認します',
         ]);
 
-        $response = $this->actingAs($admin)->post('/admin/stamp_correction_request/approve/' . $request->id . '?tab=admin', [
-            '_token' => csrf_token(),
-        ]);
+        $response = $this->actingAs($admin, 'admin')
+            ->post('/admin/stamp_correction_request/approve/' . $request->id . '?tab=admin', [
+                '_token' => csrf_token(),
+            ]);
 
         $response->assertRedirect();
 

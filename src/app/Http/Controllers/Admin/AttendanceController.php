@@ -130,17 +130,19 @@ class AttendanceController extends Controller
             return redirect()->back()->with('error', '新規勤怠に対する直接の更新はできません。');
         }
 
-        $attendance = Attendance::findOrFail($id);
+        $attendance = Attendance::with('breaks')->findOrFail($id);
 
         if ($attendance->approval_status === 'approved') {
             return redirect()->back()->with('error', '承認済みの勤怠は修正できません。');
         }
 
+        // 出退勤時間更新
         $attendance->clock_in = $request->input('clock_in');
         $attendance->clock_out = $request->input('clock_out');
         $attendance->note = $request->input('note');
         $attendance->save();
 
+        // 休憩更新
         $attendance->breaks()->delete();
         $breaks = $request->input('breaks', []);
         foreach ($breaks as $break) {
@@ -152,6 +154,28 @@ class AttendanceController extends Controller
             }
         }
 
+        // ▼ 再取得して休憩・勤務時間計算
+        $attendance->load('breaks');
+
+        $breakSeconds = $attendance->breaks->sum(function ($break) {
+            if ($break->start && $break->end) {
+                return Carbon::parse($break->end)->diffInSeconds(Carbon::parse($break->start));
+            }
+            return 0;
+        });
+
+        $workSeconds = 0;
+        if ($attendance->clock_in && $attendance->clock_out) {
+            $workSeconds = Carbon::parse($attendance->clock_out)->diffInSeconds(Carbon::parse($attendance->clock_in)) - $breakSeconds;
+            if ($workSeconds < 0) {
+                $workSeconds = 0;
+            }
+        }
+
+        $attendance->break_duration = gmdate('H:i', $breakSeconds);
+        $attendance->total_duration = gmdate('H:i', $workSeconds);
+        $attendance->save();
+
         return redirect()->route('admin.attendance.show', $attendance->id)
             ->with('status', '勤怠情報を更新しました');
     }
@@ -161,11 +185,15 @@ class AttendanceController extends Controller
         $userId = $request->input('user_id');
         $date = $request->input('date');
 
-        $existing = Attendance::where('user_id', $userId)->where('date', $date)->first();
+        // 同日データ存在チェック
+        $existing = Attendance::where('user_id', $userId)
+            ->where('date', $date)
+            ->first();
         if ($existing) {
             return redirect()->back()->with('error', 'すでに勤怠データが存在します。');
         }
 
+        // 勤怠データ新規作成
         $attendance = new Attendance();
         $attendance->user_id = $userId;
         $attendance->date = $date;
@@ -174,6 +202,7 @@ class AttendanceController extends Controller
         $attendance->note = $request->input('note');
         $attendance->save();
 
+        // 休憩データ登録
         $breaks = $request->input('breaks', []);
         foreach ($breaks as $break) {
             if (!empty($break['start']) && !empty($break['end'])) {
@@ -184,11 +213,34 @@ class AttendanceController extends Controller
             }
         }
 
+        // ▼ 再取得して休憩・勤務時間計算
+        $attendance->load('breaks');
+
+        $breakSeconds = $attendance->breaks->sum(function ($break) {
+            if ($break->start && $break->end) {
+                return Carbon::parse($break->end)->diffInSeconds(Carbon::parse($break->start));
+            }
+            return 0;
+        });
+
+        $workSeconds = 0;
+        if ($attendance->clock_in && $attendance->clock_out) {
+            $workSeconds = Carbon::parse($attendance->clock_out)->diffInSeconds(Carbon::parse($attendance->clock_in)) - $breakSeconds;
+            if ($workSeconds < 0) {
+                $workSeconds = 0;
+            }
+        }
+
+        $attendance->break_duration = gmdate('H:i', $breakSeconds);
+        $attendance->total_duration = gmdate('H:i', $workSeconds);
+        $attendance->save();
+
         return redirect()->route('admin.attendance.show', [
             'id' => $attendance->id,
             'tab' => 'admin',
         ])->with('status', '勤怠情報を新規登録しました');
     }
+
 
     public function staffDetail($id, Request $request)
     {

@@ -66,13 +66,16 @@ class AttendanceController extends Controller
         $today = $now->toDateString();
 
         $alreadyClockedIn = Attendance::where('user_id', $user->id)
-            ->where('date', $today)
+            ->whereDate('date', $today)
             ->whereNotNull('clock_in')
             ->exists();
 
         if ($alreadyClockedIn) {
-            return back()->withErrors(['clock_in' => 'すでに出勤済みです。']);
+            return back()->withErrors([
+                'clock_in' => 'すでに出勤済みです。'
+            ]);
         }
+
 
         Attendance::create([
             'user_id' => $user->id,
