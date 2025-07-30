@@ -142,7 +142,7 @@ class AttendanceController extends Controller
         $today = $now->toDateString();
 
         $attendance = Attendance::where('user_id', $user->id)
-            ->where('date', $today)
+            ->whereDate('date', $today)
             ->with('breaks')
             ->first();
 

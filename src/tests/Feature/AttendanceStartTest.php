@@ -12,10 +12,8 @@ class AttendanceStartTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * 出勤ボタンが正しく機能する
-     */
-    public function test_user_can_start_attendance()
+    /** @test */
+    public function 出勤ボタンが正しく機能する()
     {
         $user = User::factory()->create([
             'email_verified_at' => now(), // ✅ メール認証済みにする
@@ -32,10 +30,8 @@ class AttendanceStartTest extends TestCase
         ]);
     }
 
-    /**
-     * 出勤は一日一回のみできる
-     */
-    public function test_user_cannot_start_attendance_twice()
+    /** @test */
+    public function 出勤は一日一回のみできる()
     {
         $this->withoutMiddleware(\Illuminate\Auth\Middleware\EnsureEmailIsVerified::class);
 
@@ -56,10 +52,8 @@ class AttendanceStartTest extends TestCase
     }
 
 
-    /**
-     * 出勤時刻が勤怠一覧で確認できる
-     */
-    public function test_attendance_clock_in_shows_in_list()
+    /** @test */
+    public function 出勤時刻が勤怠一覧で確認できる()
     {
         $user = User::factory()->create([
             'email_verified_at' => now(), // ✅ メール認証済みにする
