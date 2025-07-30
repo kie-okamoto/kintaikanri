@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\User;
 use Carbon\Carbon;
-use App\Models\StampCorrectionRequest;
+use App\Models\AttendanceCorrectionRequest;
 use App\Http\Requests\AttendanceUpdateRequest;
 
 class AttendanceController extends Controller
@@ -58,18 +58,19 @@ class AttendanceController extends Controller
 
             $isApproved = false;
 
-            $correction = StampCorrectionRequest::where('user_id', $user->id)
-                ->where('target_date', $date)
-                ->first();
+            // 修正申請取得（新規はattendance_idがまだないので日付とuser_idで探す）
+            $correction = AttendanceCorrectionRequest::whereHas('attendance', function ($q) use ($userId, $date) {
+                $q->where('user_id', $userId)->where('date', $date);
+            })->first();
 
             if ($correction && $correction->status === 'pending' && $correction->data) {
                 $data = json_decode($correction->data, true);
 
                 if (!empty($data['clock_in'])) {
-                    $attendance->clock_in = \Carbon\Carbon::parse($data['clock_in']);
+                    $attendance->clock_in = Carbon::parse($data['clock_in']);
                 }
                 if (!empty($data['clock_out'])) {
-                    $attendance->clock_out = \Carbon\Carbon::parse($data['clock_out']);
+                    $attendance->clock_out = Carbon::parse($data['clock_out']);
                 }
                 if (array_key_exists('note', $data)) {
                     $attendance->note = $data['note'];
@@ -77,8 +78,8 @@ class AttendanceController extends Controller
                 if (!empty($data['breaks']) && is_array($data['breaks'])) {
                     $attendance->setRelation('breaks', collect($data['breaks'])->map(function ($break) {
                         return (object)[
-                            'start' => !empty($break['start']) ? \Carbon\Carbon::parse($break['start']) : null,
-                            'end'   => !empty($break['end']) ? \Carbon\Carbon::parse($break['end']) : null,
+                            'start' => !empty($break['start']) ? Carbon::parse($break['start']) : null,
+                            'end'   => !empty($break['end']) ? Carbon::parse($break['end']) : null,
                         ];
                     }));
                 }
@@ -90,18 +91,17 @@ class AttendanceController extends Controller
         $attendance = Attendance::with(['user', 'breaks'])->findOrFail($id);
         $isApproved = $attendance->approval_status === 'approved';
 
-        $correction = StampCorrectionRequest::where('user_id', $attendance->user_id)
-            ->where('target_date', $attendance->date)
-            ->first();
+        // 修正申請取得（attendance_idで紐づけ）
+        $correction = AttendanceCorrectionRequest::where('attendance_id', $attendance->id)->first();
 
         if ($correction && $correction->status === 'pending' && $correction->data) {
             $data = json_decode($correction->data, true);
 
             if (!empty($data['clock_in'])) {
-                $attendance->clock_in = \Carbon\Carbon::parse($data['clock_in']);
+                $attendance->clock_in = Carbon::parse($data['clock_in']);
             }
             if (!empty($data['clock_out'])) {
-                $attendance->clock_out = \Carbon\Carbon::parse($data['clock_out']);
+                $attendance->clock_out = Carbon::parse($data['clock_out']);
             }
             if (array_key_exists('note', $data)) {
                 $attendance->note = $data['note'];
@@ -109,8 +109,8 @@ class AttendanceController extends Controller
             if (!empty($data['breaks']) && is_array($data['breaks'])) {
                 $attendance->setRelation('breaks', collect($data['breaks'])->map(function ($break) {
                     return (object)[
-                        'start' => !empty($break['start']) ? \Carbon\Carbon::parse($break['start']) : null,
-                        'end'   => !empty($break['end']) ? \Carbon\Carbon::parse($break['end']) : null,
+                        'start' => !empty($break['start']) ? Carbon::parse($break['start']) : null,
+                        'end'   => !empty($break['end']) ? Carbon::parse($break['end']) : null,
                     ];
                 }));
             }
@@ -136,13 +136,11 @@ class AttendanceController extends Controller
             return redirect()->back()->with('error', '承認済みの勤怠は修正できません。');
         }
 
-        // 出退勤時間更新
         $attendance->clock_in = $request->input('clock_in');
         $attendance->clock_out = $request->input('clock_out');
         $attendance->note = $request->input('note');
         $attendance->save();
 
-        // 休憩更新
         $attendance->breaks()->delete();
         $breaks = $request->input('breaks', []);
         foreach ($breaks as $break) {
@@ -154,7 +152,6 @@ class AttendanceController extends Controller
             }
         }
 
-        // ▼ 再取得して休憩・勤務時間計算
         $attendance->load('breaks');
 
         $breakSeconds = $attendance->breaks->sum(function ($break) {
@@ -185,7 +182,6 @@ class AttendanceController extends Controller
         $userId = $request->input('user_id');
         $date = $request->input('date');
 
-        // 同日データ存在チェック
         $existing = Attendance::where('user_id', $userId)
             ->where('date', $date)
             ->first();
@@ -193,7 +189,6 @@ class AttendanceController extends Controller
             return redirect()->back()->with('error', 'すでに勤怠データが存在します。');
         }
 
-        // 勤怠データ新規作成
         $attendance = new Attendance();
         $attendance->user_id = $userId;
         $attendance->date = $date;
@@ -202,7 +197,6 @@ class AttendanceController extends Controller
         $attendance->note = $request->input('note');
         $attendance->save();
 
-        // 休憩データ登録
         $breaks = $request->input('breaks', []);
         foreach ($breaks as $break) {
             if (!empty($break['start']) && !empty($break['end'])) {
@@ -213,7 +207,6 @@ class AttendanceController extends Controller
             }
         }
 
-        // ▼ 再取得して休憩・勤務時間計算
         $attendance->load('breaks');
 
         $breakSeconds = $attendance->breaks->sum(function ($break) {
@@ -240,7 +233,6 @@ class AttendanceController extends Controller
             'tab' => 'admin',
         ])->with('status', '勤怠情報を新規登録しました');
     }
-
 
     public function staffDetail($id, Request $request)
     {
@@ -318,12 +310,12 @@ class AttendanceController extends Controller
             fputcsv($stream, $csvHeader);
 
             foreach ($attendances as $attendance) {
-                $clockIn = $attendance->clock_in ? \Carbon\Carbon::parse($attendance->clock_in) : null;
-                $clockOut = $attendance->clock_out ? \Carbon\Carbon::parse($attendance->clock_out) : null;
+                $clockIn = $attendance->clock_in ? Carbon::parse($attendance->clock_in) : null;
+                $clockOut = $attendance->clock_out ? Carbon::parse($attendance->clock_out) : null;
 
                 $breakSeconds = $attendance->breaks->sum(function ($break) {
                     if ($break->start && $break->end) {
-                        return \Carbon\Carbon::parse($break->end)->diffInSeconds(\Carbon\Carbon::parse($break->start));
+                        return Carbon::parse($break->end)->diffInSeconds(Carbon::parse($break->start));
                     }
                     return 0;
                 });
@@ -340,7 +332,7 @@ class AttendanceController extends Controller
                 $workDuration = gmdate('H:i', $workSeconds);
 
                 fputcsv($stream, [
-                    \Carbon\Carbon::parse($attendance->date)->format('Y-m-d'),
+                    Carbon::parse($attendance->date)->format('Y-m-d'),
                     $clockIn ? $clockIn->format('H:i') : '',
                     $clockOut ? $clockOut->format('H:i') : '',
                     $breakDuration,

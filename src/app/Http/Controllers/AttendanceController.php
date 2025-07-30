@@ -114,21 +114,26 @@ class AttendanceController extends Controller
         $today = $now->toDateString();
 
         $attendance = Attendance::where('user_id', $user->id)
-            ->where('date', $today)
+            ->whereDate('date', $today)
             ->with('breaks')
             ->first();
 
         if ($attendance) {
-            $lastBreak = $attendance->breaks()->whereNull('end')->latest()->first();
+            // 休憩終了処理
+            $lastBreak = $attendance->breaks()
+                ->whereNull('end')
+                ->orderBy('start', 'desc')
+                ->first();
+
             if ($lastBreak) {
-                $lastBreak->end = $now;
-                $lastBreak->save();
+                $lastBreak->update(['end' => $now]);
             }
         }
 
         Session::put('attendance_status', 'working');
         return redirect()->route('attendance.index');
     }
+
 
     public function end(Request $request)
     {

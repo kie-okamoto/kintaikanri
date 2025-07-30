@@ -70,3 +70,11 @@ body {
 .stamp-index__detail-link:hover {
   color: #333;
 }
+
+
+.stamp-index__table td[colspan] {
+  text-align: center;
+  vertical-align: middle;
+  height: 60px;
+  color: #555;
+}

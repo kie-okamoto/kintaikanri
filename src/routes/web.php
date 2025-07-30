@@ -87,10 +87,10 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin')->group(function
         ->where('id', '[0-9]+|new')
         ->name('attendance.show');
 
-    // ✅ 更新（修正時：PUT使用）
+    // 更新（修正時：PUT使用）
     Route::put('/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
 
-    // ✅ 新規登録（未登録日：POST使用）
+    // 新規登録（未登録日：POST使用）
     Route::post('/attendance/new', [AdminAttendanceController::class, 'storeNew'])->name('attendance.storeNew');
 
     // スタッフ管理
@@ -102,5 +102,5 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin')->group(function
     // 申請処理
     Route::get('/stamp_correction_request/list', [AdminStampController::class, 'index'])->name('stamp.list');
     Route::get('/stamp_correction_request/{id}', [AdminStampController::class, 'show'])->name('stamp_correction_request.show');
-    Route::post('/stamp_correction_request/approve/{attendance_correct_request}', [AdminStampController::class, 'approve'])->name('stamp.approve');
+    Route::post('/stamp_correction_request/approve/{attendance_correction_request}', [AdminStampController::class, 'approve'])->name('stamp.approve');
 });

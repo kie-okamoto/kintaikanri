@@ -53,11 +53,16 @@
             @endif
           </td>
           <td>{{ $request->attendance->user->name ?? '不明' }}</td>
-          <td>{{ optional($request->attendance)->date ? \Carbon\Carbon::parse($request->attendance->date)->format('Y/m/d') : '未設定' }}</td>
-          <td>{{ $request->reason }}</td>
+          <td>
+            {{ optional($request->attendance)->date 
+                ? \Carbon\Carbon::parse($request->attendance->date)->format('Y/m/d') 
+                : '未設定' }}
+          </td>
+          <td>{{ $request->reason ?? '—' }}</td>
           <td>{{ \Carbon\Carbon::parse($request->submitted_at)->format('Y/m/d') }}</td>
           <td>
-            <a href="{{ route('admin.stamp_correction_request.show', $request->id) }}" class="stamp-index__detail-link">詳細</a>
+            <a href="{{ route('admin.stamp_correction_request.show', $request->id) }}"
+              class="stamp-index__detail-link">詳細</a>
           </td>
         </tr>
         @empty

@@ -78,9 +78,16 @@ class Attendance extends Model
         });
     }
 
+    // pending専用（既存機能用）
     public function correctionRequest()
     {
         return $this->hasOne(\App\Models\AttendanceCorrectionRequest::class)
             ->where('status', 'pending');
+    }
+
+    // 全件取得（approveや管理機能用）
+    public function correctionRequests()
+    {
+        return $this->hasMany(\App\Models\AttendanceCorrectionRequest::class, 'attendance_id');
     }
 }
