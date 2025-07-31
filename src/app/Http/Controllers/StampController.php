@@ -12,10 +12,9 @@ class StampController extends Controller
     {
         $user = Auth::user();
 
-        // クエリパラメータでタブ切り替え（デフォルトは承認待ち）
         $tab = $request->query('tab', 'waiting');
 
-        // ログイン中のユーザーに紐づく修正申請を取得
+
         $query = AttendanceCorrectionRequest::with('attendance')
             ->whereHas('attendance', function ($q) use ($user) {
                 $q->where('user_id', $user->id);

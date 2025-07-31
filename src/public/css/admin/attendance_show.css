@@ -180,7 +180,6 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   opacity: 1;
 }
 
-/* ▼ バリデーションエラー文字を赤に変更 ▼ */
 .invalid-feedback,
 .error {
   color: red;

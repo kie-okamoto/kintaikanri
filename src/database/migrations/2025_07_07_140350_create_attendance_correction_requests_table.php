@@ -21,7 +21,6 @@ class CreateAttendanceCorrectionRequestsTable extends Migration
             $table->string('status')->default('pending');
             $table->timestamps();
 
-            // 外部キー制約
             $table->foreign('attendance_id')
                 ->references('id')
                 ->on('attendances')

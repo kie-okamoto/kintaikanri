@@ -14,7 +14,6 @@ class AddIsFixedToAttendancesTable extends Migration
     public function up()
     {
         Schema::table('attendances', function (Blueprint $table) {
-            // 修正済みフラグを追加（初期値は false）
             $table->boolean('is_fixed')->default(false)->after('note');
         });
     }

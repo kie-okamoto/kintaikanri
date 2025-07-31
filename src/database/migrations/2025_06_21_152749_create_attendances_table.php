@@ -26,11 +26,10 @@ class CreateAttendancesTable extends Migration
             $table->timestamp('break_end')->nullable();     // 休憩終了
             $table->timestamp('clock_out')->nullable();     // 退勤
 
-            // 勤務時間や休憩時間を格納するカラム（任意）
             $table->time('break_duration')->nullable();     // 休憩時間
             $table->time('total_duration')->nullable();     // 勤務合計時間
 
-            // 備考欄（追加）
+
             $table->text('note')->nullable();               // 備考
 
             $table->timestamps();

@@ -19,7 +19,6 @@ class StampController extends Controller
         $query = AttendanceCorrectionRequest::with('attendance.user')
             ->orderBy('submitted_at', 'desc');
 
-        // タブによるフィルタリング
         if ($tab === 'approved') {
             $query->where('status', 'approved');
         } else {

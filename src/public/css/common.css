@@ -1,4 +1,3 @@
-/* ✅ 共通ベースは維持。ただしロゴ指定は削除 */
 body {
   margin: 0;
   padding: 0;
@@ -25,5 +24,3 @@ button {
   font-family: inherit;
   cursor: pointer;
 }
-
-/* ✅ header__logoに関する記述は削除 */

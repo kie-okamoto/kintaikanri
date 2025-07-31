@@ -21,7 +21,6 @@ class LoginController extends Controller
      */
     public function login(AdminLoginRequest $request)
     {
-        // AdminLoginRequest内でログイン試行済みなので、ここでは成功処理のみ
         $request->session()->regenerate();
         return redirect()->route('admin.attendance.list');
     }

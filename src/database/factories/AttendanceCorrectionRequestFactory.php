@@ -32,7 +32,6 @@ class AttendanceCorrectionRequestFactory extends Factory
 
     public function configure()
     {
-        // 関連する Attendance を自動生成
         return $this->for(
             Attendance::factory()->state([
                 'date' => Carbon::today()->toDateString(),

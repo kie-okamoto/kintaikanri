@@ -14,7 +14,7 @@ class AttendanceBreakFactory extends Factory
     public function definition()
     {
         return [
-            'attendance_id' => Attendance::factory(), // または固定値 1 にしたい場合は 1
+            'attendance_id' => Attendance::factory(),
             'start' => Carbon::now()->subMinutes(30),
             'end' => null,
             'created_at' => now(),

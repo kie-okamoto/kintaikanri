@@ -236,7 +236,6 @@ class AttendanceController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // 現在の月を取得（クエリパラメータに month があればそれを使用）
         $currentMonth = $request->query('month')
             ? Carbon::parse($request->query('month'))->startOfMonth()
             : Carbon::now()->startOfMonth();

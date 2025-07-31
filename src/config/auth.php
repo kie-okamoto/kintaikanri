@@ -3,17 +3,17 @@
 return [
 
     'defaults' => [
-        'guard' => 'web',           // デフォルトは一般ユーザー
+        'guard' => 'web',
         'passwords' => 'users',
     ],
 
     // ▼ 認証ガード（users用とadmins用を分離）
     'guards' => [
-        'web' => [                  // 一般ユーザー用
+        'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'admin' => [                // 管理者用
+        'admin' => [
             'driver' => 'session',
             'provider' => 'admins',
         ],
@@ -39,13 +39,6 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
-        // 管理者のパスワードリセットが必要なら以下を有効にする
-        // 'admins' => [
-        //     'provider' => 'admins',
-        //     'table' => 'password_resets',
-        //     'expire' => 60,
-        //     'throttle' => 60,
-        // ],
     ],
 
     // ▼ パスワード確認の有効時間（デフォルト 3時間）

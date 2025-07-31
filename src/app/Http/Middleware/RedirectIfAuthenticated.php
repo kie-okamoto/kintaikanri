@@ -26,7 +26,7 @@ class RedirectIfAuthenticated
 
                 // ✅ メール認証直後のリダイレクト制御
                 if (session()->pull('verified_from_email')) {
-                    Auth::guard($guard)->logout(); // 強制ログアウト
+                    Auth::guard($guard)->logout();
                     return redirect('/login')->with('status', 'メール認証が完了しました。ログインしてください。');
                 }
 

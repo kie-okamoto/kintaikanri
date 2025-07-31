@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
-use App\Models\StampCorrectionRequest;
 
 class Attendance extends Model
 {
@@ -65,7 +64,7 @@ class Attendance extends Model
 
     /**
      * 保存前に自動で合計時間を計算
-     * - breaksが未ロードでもロードして計算できるように修正
+     * - breaksが未ロードでも計算できるように修正
      */
     protected static function booted()
     {

@@ -27,16 +27,13 @@ class AttendanceCorrectionRequest extends Model
     public function approve()
     {
         \DB::transaction(function () {
-            // attendance_id がない場合は強制作成
             if (empty($this->attendance_id)) {
                 $attendance = \App\Models\Attendance::factory()->create();
                 $this->attendance_id = $attendance->id;
             }
 
-            // 必要なら関連を再ロード
             $this->loadMissing('attendance');
 
-            // 勤怠データ更新
             if ($this->attendance && $this->data) {
                 $data = json_decode($this->data, true);
 
@@ -56,7 +53,6 @@ class AttendanceCorrectionRequest extends Model
                 $this->attendance->save();
             }
 
-            // ステータス更新
             $this->status = 'approved';
             $this->save();
         });

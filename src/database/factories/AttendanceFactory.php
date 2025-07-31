@@ -13,7 +13,7 @@ class AttendanceFactory extends Factory
     public function definition()
     {
         return [
-            'user_id' => 1, // テストごとに上書き可能
+            'user_id' => 1,
             'date' => Carbon::today(),
             'clock_in' => null,
             'clock_out' => null,
