@@ -83,7 +83,7 @@ MOCK_STRIPE=true
 ## 使用技術
 
 - Laravel 8.83.8
-- PHP 7.4.9
+- PHP 8.1
 - MySQL 8.0.26
 - Docker / Docker Compose
 - Mailhog（開発用メール送信確認）
