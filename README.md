@@ -37,7 +37,6 @@ MAIL_FROM_NAME="KintaiApp"
 5. アプリケーションキーの作成 `php artisan key:generate`
 6. マイグレーションの実行 `php artisan migrate`
 7. シーディングの実行 `php artisan db:seed`
-8. ストレージリンクの作成 `php artisan storage:link`
 
 ### テストの実行方法
 
