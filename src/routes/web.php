@@ -60,7 +60,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/attendance/list', [AttendanceController::class, 'list'])->name('attendance.list');
     Route::get('/attendance/{id}', [AttendanceController::class, 'show'])->name('attendance.show')->where('id', '.*');
     Route::post('/attendance/{id}/update-request', [AttendanceController::class, 'updateRequest'])->name('attendance.updateRequest');
+
+    // 申請一覧
     Route::get('/stamp_correction_request/list', [StampController::class, 'index'])->name('stamp.list');
+
+    // ✅ 申請詳細（追加）
+    Route::get('/stamp_correction_request/{id}', [StampController::class, 'show'])->name('stamp.show');
 });
 
 /*

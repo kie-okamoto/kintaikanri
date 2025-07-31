@@ -58,7 +58,6 @@ class AttendanceController extends Controller
 
             $isApproved = false;
 
-            // 修正申請取得（新規はattendance_idがまだないので日付とuser_idで探す）
             $correction = AttendanceCorrectionRequest::whereHas('attendance', function ($q) use ($userId, $date) {
                 $q->where('user_id', $userId)->where('date', $date);
             })->first();
@@ -91,7 +90,6 @@ class AttendanceController extends Controller
         $attendance = Attendance::with(['user', 'breaks'])->findOrFail($id);
         $isApproved = $attendance->approval_status === 'approved';
 
-        // 修正申請取得（attendance_idで紐づけ）
         $correction = AttendanceCorrectionRequest::where('attendance_id', $attendance->id)->first();
 
         if ($correction && $correction->status === 'pending' && $correction->data) {
@@ -233,6 +231,65 @@ class AttendanceController extends Controller
             'tab' => 'admin',
         ])->with('status', '勤怠情報を新規登録しました');
     }
+
+    public function staffList($id, Request $request)
+    {
+        $user = User::findOrFail($id);
+
+        // 現在の月を取得（クエリパラメータに month があればそれを使用）
+        $currentMonth = $request->query('month')
+            ? Carbon::parse($request->query('month'))->startOfMonth()
+            : Carbon::now()->startOfMonth();
+
+        // 勤怠データを該当月分取得
+        $attendances = collect($user->attendances()
+            ->whereYear('date', $currentMonth->year)
+            ->whereMonth('date', $currentMonth->month)
+            ->get());
+
+        $daysInMonth = $currentMonth->daysInMonth;
+        $fullMonthAttendances = collect();
+
+        // 該当月の日ごとにデータを準備
+        for ($i = 0; $i < $daysInMonth; $i++) {
+            $date = $currentMonth->copy()->addDays($i)->toDateString();
+
+            $existing = $attendances->first(function ($a) use ($date) {
+                return Carbon::parse($a->date)->toDateString() === $date;
+            });
+
+            $attendance = $existing ?: new Attendance([
+                'date' => $date,
+                'clock_in' => null,
+                'clock_out' => null,
+                'break_duration' => null,
+                'total_duration' => null,
+            ]);
+
+            if (method_exists($attendance, 'calculateDurations')) {
+                $attendance->calculateDurations();
+            }
+
+            $attendance->formatted_clock_in = $attendance->clock_in
+                ? Carbon::parse($attendance->clock_in)->format('H:i')
+                : '';
+
+            $attendance->formatted_clock_out = $attendance->clock_out
+                ? Carbon::parse($attendance->clock_out)->format('H:i')
+                : '';
+
+            $fullMonthAttendances->push($attendance);
+        }
+
+        return view('admin.attendance.staff_detail', [
+            'user' => $user,
+            'attendances' => $fullMonthAttendances,
+            'currentMonth' => $currentMonth,
+            'previousMonth' => $currentMonth->copy()->subMonth()->format('Y-m'),
+            'nextMonth' => $currentMonth->copy()->addMonth()->format('Y-m'),
+        ]);
+    }
+
 
     public function staffDetail($id, Request $request)
     {
