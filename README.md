@@ -114,8 +114,6 @@ Seeder により以下のユーザー情報が初期登録されます。
 
 ## URL
 
-## URL
-
 - 開発環境: http://localhost/
 - 一般ユーザーログイン画面: http://localhost/login
 - 管理者ログイン画面: http://localhost/admin/login
